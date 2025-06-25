@@ -10,17 +10,20 @@ const CTASection = () => {
   };
 
   return (
-    <section className="py-20 bg-swayami-black">
+    <section className="py-20 bg-gradient-to-r from-swayami-primary to-purple-600 dark:from-purple-800 dark:to-purple-900">
       <div className="swayami-container text-center">
-        <div className="fade-up-on-scroll">
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-8">
-            Ready to meet the mirror?
+        <div className="max-w-3xl mx-auto fade-up-on-scroll">
+          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+            You don't need more apps. You need clarity.
           </h2>
+          <p className="text-xl text-purple-100 mb-10 leading-relaxed">
+            Join thousands who've already started their journey to intentional living.
+          </p>
           <button 
             onClick={scrollToWaitlist}
-            className="bg-white text-swayami-black px-8 py-4 rounded font-semibold text-lg transition-all duration-200 hover:shadow-lg hover:translate-y-[-4px]"
+            className="bg-white text-swayami-primary hover:bg-gray-100 text-xl font-semibold px-12 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
           >
-            Join the wait-list
+            Join the Waitlist
           </button>
         </div>
       </div>

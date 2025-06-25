@@ -4,6 +4,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/contexts/AppContext';
 import { Trash2, Edit, Plus, Sparkles, ChevronDown, ChevronRight, Archive, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -142,9 +143,9 @@ const Dashboard = () => {
                           </span>
                         </div>
                         <div className={`text-xs mt-2 px-2 py-1 rounded-full inline-block ${
-                          goal.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          goal.status === 'active' ? 'bg-blue-100 text-blue-800' : 
-                          'bg-gray-100 text-gray-800'
+                          goal.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                          goal.status === 'active' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                         }`}>
                           {goal.status}
                         </div>
@@ -157,15 +158,27 @@ const Dashboard = () => {
           </div>
         </Collapsible>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* PLAN Section */}
-          <div className="lg:col-span-2">
-            <div className="swayami-card">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-swayami-black dark:text-white">
-                  PLAN
-                </h3>
+        {/* Tabbed Dashboard */}
+        <div className="swayami-card">
+          <Tabs defaultValue="plan" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="plan">PLAN</TabsTrigger>
+              <TabsTrigger value="progress">PROGRESS</TabsTrigger>
+              <TabsTrigger value="reflect">REFLECT</TabsTrigger>
+            </TabsList>
+
+            {/* PLAN Tab */}
+            <TabsContent value="plan" className="space-y-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+                  Today's Plan, Rooted in Your Intentions
+                </h2>
+                <p className="text-swayami-light-text dark:text-gray-400">
+                  Focus on what matters most today
+                </p>
+              </div>
+
+              <div className="flex justify-end mb-6">
                 <Button
                   onClick={regenerateRecommendations}
                   variant="outline"
@@ -178,14 +191,17 @@ const Dashboard = () => {
               </div>
               
               {Object.entries(tasksByGoal).map(([goalType, goalTasks]) => (
-                <div key={goalType} className="mb-8">
-                  <h4 className="font-semibold text-swayami-black dark:text-white mb-4">{goalType}</h4>
+                <div key={goalType} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6">
+                  <div className="flex items-center mb-4">
+                    <span className="text-2xl mr-3">🎯</span>
+                    <h3 className="text-xl font-semibold text-swayami-black dark:text-white">{goalType}</h3>
+                  </div>
                   
                   <div className="space-y-3 mb-4">
                     {goalTasks.map((task) => (
                       <div 
                         key={task.id} 
-                        className="flex items-center space-x-3 p-3 rounded-lg border border-swayami-border dark:border-gray-700 hover:shadow-md transition-shadow"
+                        className="flex items-center space-x-3 p-4 rounded-lg border border-swayami-border dark:border-gray-700 hover:shadow-md transition-shadow bg-white dark:bg-gray-700"
                       >
                         <Checkbox
                           checked={task.isCompleted}
@@ -214,7 +230,7 @@ const Dashboard = () => {
                               {task.title}
                               {task.isRecommended && (
                                 <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-swayami-primary dark:text-purple-300 px-2 py-1 rounded-full">
-                                  Recommended by AI
+                                  Recommended
                                 </span>
                               )}
                             </span>
@@ -240,78 +256,79 @@ const Dashboard = () => {
 
                   <div className="flex space-x-2">
                     <Input
-                      placeholder="Add a new task..."
+                      placeholder={`Add task to ${goalType}...`}
                       value={newTaskTitles[goalType] || ''}
                       onChange={(e) => setNewTaskTitles(prev => ({ ...prev, [goalType]: e.target.value }))}
                       onKeyPress={(e) => e.key === 'Enter' && handleAddTask(goalType)}
                       className="flex-1"
                     />
-                    <Button onClick={() => handleAddTask(goalType)}>
+                    <Button onClick={() => handleAddTask(goalType)} className="bg-swayami-primary hover:bg-swayami-primary-hover">
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </TabsContent>
 
-          {/* PROGRESS & REFLECT Sidebar */}
-          <div className="space-y-6">
-            
-            {/* PROGRESS */}
-            <div className="swayami-card">
-              <h3 className="text-lg font-semibold text-swayami-black dark:text-white mb-4">
-                PROGRESS
-              </h3>
-              
+            {/* PROGRESS Tab */}
+            <TabsContent value="progress" className="space-y-6">
               <div className="text-center mb-6">
-                <div className="relative w-24 h-24 mx-auto mb-4">
-                  <svg className="w-24 h-24 transform -rotate-90">
+                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+                  Track What You're Becoming
+                </h2>
+                <p className="text-swayami-light-text dark:text-gray-400">
+                  Every step forward counts
+                </p>
+              </div>
+
+              <div className="text-center mb-6">
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <svg className="w-32 h-32 transform -rotate-90">
                     <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
+                      cx="64"
+                      cy="64"
+                      r="56"
                       stroke="#E5E5E5"
-                      strokeWidth="8"
+                      strokeWidth="12"
                       fill="none"
                     />
                     <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
+                      cx="64"
+                      cy="64"
+                      r="56"
                       stroke="#9650D4"
-                      strokeWidth="8"
+                      strokeWidth="12"
                       fill="none"
-                      strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - completionPercentage / 100)}`}
+                      strokeDasharray={`${2 * Math.PI * 56}`}
+                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - completionPercentage / 100)}`}
                       className="transition-all duration-500"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-bold text-swayami-black dark:text-white">
+                    <span className="text-3xl font-bold text-swayami-black dark:text-white">
                       {completionPercentage}%
                     </span>
                   </div>
                 </div>
                 
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-swayami-light-text dark:text-gray-400">Tasks Completed:</span>
-                    <span className="font-medium dark:text-white">{completedTasks}/{totalTasks}</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="text-2xl font-bold text-swayami-primary">{completedTasks}/{totalTasks}</div>
+                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Tasks Completed</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-swayami-light-text dark:text-gray-400">Habits Completed:</span>
-                    <span className="font-medium dark:text-white">{completedHabits}/{habits.length}</span>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="text-2xl font-bold text-swayami-primary">{user.streak} 🔥</div>
+                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Day Streak</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-swayami-light-text dark:text-gray-400">Current Streak:</span>
-                    <span className="font-medium dark:text-white">{user.streak} days 🔥</span>
+                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="text-lg font-bold text-swayami-primary">{user.level}</div>
+                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Current Rank</div>
                   </div>
                 </div>
 
                 {completionPercentage < 100 && (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 rounded-lg p-3 mb-4">
-                    <p className="text-sm font-medium text-swayami-primary dark:text-purple-300">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 rounded-lg p-4 mb-6">
+                    <p className="font-medium text-swayami-primary dark:text-purple-300">
                       Finish Strong Today 💪
                     </p>
                   </div>
@@ -319,17 +336,17 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <h4 className="font-medium text-swayami-black dark:text-white mb-3">Daily Habits</h4>
-                <div className="space-y-2">
+                <h3 className="font-semibold text-swayami-black dark:text-white mb-4">Daily Habits</h3>
+                <div className="space-y-3">
                   {habits.map((habit) => (
-                    <div key={habit.id} className="flex items-center space-x-3">
+                    <div key={habit.id} className="flex items-center space-x-3 p-3 rounded-lg border border-swayami-border dark:border-gray-700 bg-white dark:bg-gray-800">
                       <Checkbox
                         checked={habit.completed}
                         onCheckedChange={() => toggleHabit(habit.id)}
                       />
-                      <span className="text-lg">{habit.emoji}</span>
+                      <span className="text-xl">{habit.emoji}</span>
                       <span 
-                        className={`flex-1 text-sm ${
+                        className={`flex-1 ${
                           habit.completed 
                             ? 'line-through text-swayami-light-text dark:text-gray-400' 
                             : 'text-swayami-black dark:text-white'
@@ -341,62 +358,67 @@ const Dashboard = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </TabsContent>
 
-            {/* REFLECT */}
-            <div className="swayami-card">
-              <h3 className="text-lg font-semibold text-swayami-black dark:text-white mb-4">
-                REFLECT
-              </h3>
+            {/* REFLECT Tab */}
+            <TabsContent value="reflect" className="space-y-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+                  Pause. Write. Understand.
+                </h2>
+                <p className="text-swayami-light-text dark:text-gray-400">
+                  Transform your thoughts into clarity
+                </p>
+              </div>
               
               {lastJournalEntry ? (
-                <div className="mb-4">
+                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="text-sm text-swayami-light-text dark:text-gray-400">Last mood:</span>
-                    <span className="text-sm font-medium dark:text-white">{lastJournalEntry.mood}</span>
+                    <span className="font-medium dark:text-white">{lastJournalEntry.mood}</span>
                   </div>
                   <p className="text-sm text-swayami-light-text dark:text-gray-400 line-clamp-2">
                     {lastJournalEntry.text.slice(0, 100)}...
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-swayami-light-text dark:text-gray-400 mb-4">
+                <p className="text-center text-swayami-light-text dark:text-gray-400 mb-6">
                   No reflections yet. Start your mindfulness journey!
                 </p>
               )}
               
               <Button 
                 onClick={() => navigate('/mindspace')}
-                className="w-full bg-swayami-primary hover:bg-swayami-primary-hover mb-4"
+                className="w-full bg-swayami-primary hover:bg-swayami-primary-hover mb-6"
               >
                 Write a New Reflection
               </Button>
 
               {/* Daily Motivation Quote */}
-              <div className="border-t border-swayami-border dark:border-gray-700 pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-medium text-swayami-black dark:text-white">Daily Motivation</h4>
+              <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/50 dark:to-pink-900/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-swayami-black dark:text-white">Daily Motivation</h4>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={rotateQuote}
-                    className="text-swayami-primary hover:bg-purple-50 dark:hover:bg-purple-900"
+                    className="text-swayami-primary hover:bg-purple-100 dark:hover:bg-purple-800"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-swayami-light-text dark:text-gray-400 italic">
+                <p className="text-sm text-swayami-light-text dark:text-gray-300 italic leading-relaxed">
                   {motivationQuotes[currentQuote]}
                 </p>
               </div>
               
-              <div className="mt-4 pt-4 border-t border-swayami-border dark:border-gray-700">
-                <p className="text-xs text-swayami-light-text dark:text-gray-400 text-center">
+              <div className="pt-6 border-t border-swayami-border dark:border-gray-700">
+                <p className="text-sm text-swayami-light-text dark:text-gray-400 text-center italic">
                   "You're 1 reflection away from your next breakthrough."
                 </p>
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Layout>

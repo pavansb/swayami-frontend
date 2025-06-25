@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface Goal {
@@ -52,6 +51,7 @@ interface AppContextType {
   updateJournalEntry: (entryId: string, updates: Partial<JournalEntry>) => void;
   toggleHabit: (habitId: string) => void;
   regenerateRecommendations: () => void;
+  resetAllData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -265,6 +265,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const resetAllData = () => {
+    // Clear all localStorage data
+    localStorage.removeItem('swayami_user');
+    localStorage.removeItem('swayami_goals');
+    localStorage.removeItem('swayami_tasks');
+    localStorage.removeItem('swayami_journal');
+    localStorage.removeItem('swayami_habits');
+    
+    // Reset all state to initial values
+    setUser({
+      isLoggedIn: true,
+      hasCompletedOnboarding: false,
+      streak: 0,
+      level: 'Mindful Novice',
+    });
+    setGoals([]);
+    setTasks([]);
+    setJournalEntries([]);
+    setHabits([
+      { id: '1', emoji: '💧', label: 'Drink Water', completed: false },
+      { id: '2', emoji: '🏃', label: 'Exercise', completed: false },
+      { id: '3', emoji: '📚', label: 'Read', completed: false },
+    ]);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -284,6 +309,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         updateJournalEntry,
         toggleHabit,
         regenerateRecommendations,
+        resetAllData,
       }}
     >
       {children}
