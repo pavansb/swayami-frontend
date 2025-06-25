@@ -3,7 +3,7 @@ import React from 'react';
 
 const HeroSection = () => {
   const scrollToDemo = () => {
-    const element = document.getElementById('features');
+    const element = document.getElementById('how-it-works');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
@@ -20,19 +20,20 @@ const HeroSection = () => {
     <section className="py-20 lg:py-32 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
       <div className="swayami-container">
         <div className="text-center max-w-4xl mx-auto mb-16 fade-up-on-scroll">
-          <h1 className="text-5xl lg:text-7xl font-bold text-swayami-black dark:text-white mb-6 leading-tight uppercase tracking-tight">
-            Meet the AI Mirror That Helps You Build a Better You.
+          <h1 className="text-5xl lg:text-7xl font-bold text-swayami-black dark:text-white mb-6 leading-tight tracking-tight">
+            Own your growth. Every single day.
           </h1>
-          <p className="text-xl lg:text-2xl text-swayami-light-text dark:text-gray-300 mb-10 leading-relaxed font-light">
-            Swayami is your personal productivity partner — one that reflects your goals, guides your growth, and evolves with your discipline.
-          </p>
+          <h2 className="text-xl lg:text-2xl text-swayami-light-text dark:text-gray-300 mb-10 leading-relaxed font-light">
+            Swayami is your AI-powered self-reliance dashboard — helping you set meaningful goals, build powerful habits, and reflect deeply.<br />
+            A tool to bring structure, clarity, and progress to your most important work — both personal and professional.
+          </h2>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <button 
               onClick={scrollToWaitlist}
               className="bg-swayami-primary hover:bg-swayami-primary-hover text-white text-lg font-semibold px-8 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
             >
-              Join Early Access
+              Join the Early Access Waitlist
             </button>
             <button 
               onClick={scrollToDemo}

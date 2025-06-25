@@ -4,17 +4,17 @@ import React from 'react';
 const SocialProofSection = () => {
   const testimonials = [
     {
-      quote: "It's Notion meets Headspace, but 10x more actionable.",
-      author: "Early Beta User #12"
+      quote: "Swayami didn't just organize my life. It made me feel in control again.",
+      author: "Early Beta User"
     },
     {
-      quote: "I started a side hustle, fixed my sleep, and landed my dream role. It works.",
-      author: "Ahaan (Beta Tester)"
+      quote: "I launched a side hustle, cleared my head, and found clarity. This thing works.",
+      author: "Ahaan, co-pilot"
     }
   ];
 
   return (
-    <section className="py-20 bg-white dark:bg-gray-900">
+    <section id="testimonials" className="py-20 bg-gray-50 dark:bg-gray-800">
       <div className="swayami-container">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 fade-up-on-scroll">
           {testimonials.map((testimonial, index) => (

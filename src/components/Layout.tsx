@@ -23,9 +23,13 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-gray-50 dark:bg-gray-800 border-r border-swayami-border dark:border-gray-700">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-swayami-black dark:text-white mb-8">
-            Swayami
-          </h1>
+          <div className="mb-8">
+            <img 
+              src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
+              alt="Swayami" 
+              className="h-8 w-auto"
+            />
+          </div>
           
           <nav className="space-y-2">
             {navigation.map((item) => (
@@ -57,9 +61,11 @@ const Layout = ({ children }: LayoutProps) => {
         {/* Mobile Header */}
         <header className="md:hidden border-b border-swayami-border dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between px-4 py-4">
-            <h1 className="text-lg font-bold text-swayami-black dark:text-white">
-              Swayami
-            </h1>
+            <img 
+              src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
+              alt="Swayami" 
+              className="h-6 w-auto"
+            />
             <div className="flex items-center space-x-4">
               <ProfileDropdown />
               <MobileMenu />

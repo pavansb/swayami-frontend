@@ -4,19 +4,29 @@ import React from 'react';
 const WhoItsForSection = () => {
   const personas = [
     {
-      emoji: '🧠',
+      emoji: '🧑‍💼',
       title: 'Founders',
-      description: 'Structure your day. Launch your vision.',
+      description: 'Build structure. Build traction. Build your vision.',
+    },
+    {
+      emoji: '🎯',
+      title: 'Creators',
+      description: 'Turn scattered energy into consistent output.',
     },
     {
       emoji: '📈',
       title: 'Knowledge Workers',
-      description: 'Reflect, act, and get shit done.',
+      description: 'Get clarity on what matters most.',
     },
     {
-      emoji: '🎨',
-      title: 'Creators',
-      description: 'Turn chaos into consistent output.',
+      emoji: '😮‍💨',
+      title: 'Burnt-out Professionals',
+      description: 'Reflect. Reset. Realign.',
+    },
+    {
+      emoji: '💡',
+      title: 'Dreamers',
+      description: 'Turn intentions into action, one day at a time.',
     },
   ];
 
@@ -25,14 +35,11 @@ const WhoItsForSection = () => {
       <div className="swayami-container">
         <div className="text-center mb-16 fade-up-on-scroll">
           <h2 className="text-3xl lg:text-4xl font-bold text-swayami-black dark:text-white mb-4">
-            Built for People Who Build
+            Built for those who build themselves.
           </h2>
-          <p className="text-lg text-swayami-light-text dark:text-gray-300 max-w-2xl mx-auto">
-            Whether you're scaling a startup, mastering your craft, or creating something new — Swayami meets you where you are.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 fade-up-on-scroll">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 fade-up-on-scroll">
           {personas.map((persona, index) => (
             <div 
               key={index}

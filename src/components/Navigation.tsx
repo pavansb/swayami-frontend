@@ -13,16 +13,26 @@ const Navigation = () => {
   return (
     <nav className="w-full py-6 border-b border-swayami-border bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="swayami-container flex items-center justify-between">
-        <div className="text-xl font-bold text-swayami-black">
-          Swayami
+        <div className="flex items-center">
+          <img 
+            src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
+            alt="Swayami" 
+            className="h-8 w-auto"
+          />
         </div>
         
         <div className="flex items-center gap-8">
           <button 
-            onClick={() => scrollToSection('features')}
+            onClick={() => scrollToSection('how-it-works')}
             className="swayami-button-ghost text-sm font-medium"
           >
-            See Features
+            How It Works
+          </button>
+          <button 
+            onClick={() => scrollToSection('testimonials')}
+            className="swayami-button-ghost text-sm font-medium"
+          >
+            Testimonials
           </button>
           <Link 
             to="/login"
