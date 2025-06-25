@@ -9,9 +9,11 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Mindspace from "./pages/Mindspace";
 import Progress from "./pages/Progress";
+import Settings from "./pages/Settings";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AppProvider } from "./contexts/AppContext";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,7 @@ const AppRoutes = () => (
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/mindspace" element={<Mindspace />} />
       <Route path="/progress" element={<Progress />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
@@ -31,13 +34,15 @@ const AppRoutes = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AppProvider>
-      <TooltipProvider>
-        <AppRoutes />
-        <Toaster />
-        <Sonner />
-      </TooltipProvider>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <TooltipProvider>
+          <AppRoutes />
+          <Toaster />
+          <Sonner />
+        </TooltipProvider>
+      </AppProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

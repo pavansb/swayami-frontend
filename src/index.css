@@ -46,6 +46,45 @@
     --sidebar-border: 0 0% 91%;
     --sidebar-ring: 269 58% 57%;
   }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 269 58% 57%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 16.1%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 16.1%;
+    --muted-foreground: 0 0% 63.9%;
+
+    --accent: 0 0% 16.1%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 269 58% 57%;
+
+    --sidebar-background: 0 0% 12%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 269 58% 57%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 269 58% 57%;
+  }
 }
 
 @layer base {
@@ -64,19 +103,19 @@
 
 @layer components {
   .swayami-container {
-    @apply max-w-[1120px] mx-auto px-6;
+    @apply max-w-[1120px] mx-auto px-4 md:px-6;
   }
 
   .swayami-card {
-    @apply bg-white border border-swayami-border rounded-xl p-6;
+    @apply bg-white dark:bg-gray-800 border border-swayami-border dark:border-gray-700 rounded-xl p-4 md:p-6 hover:shadow-lg transition-shadow duration-200;
   }
 
   .swayami-button {
-    @apply bg-swayami-primary text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-swayami-primary-hover hover:shadow-lg hover:translate-y-[-4px];
+    @apply bg-swayami-primary text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-swayami-primary-hover hover:shadow-lg hover:translate-y-[-4px];
   }
 
   .swayami-button-ghost {
-    @apply text-swayami-black hover:text-swayami-light-text transition-colors duration-200;
+    @apply text-swayami-black dark:text-white hover:text-swayami-light-text dark:hover:text-gray-300 transition-colors duration-200;
   }
 
   .fade-up-on-scroll {
@@ -86,4 +125,40 @@
   .fade-up-on-scroll.visible {
     @apply opacity-100 translate-y-0;
   }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .swayami-container {
+      @apply px-4;
+    }
+    
+    .swayami-card {
+      @apply p-4;
+    }
+    
+    .grid {
+      @apply gap-4;
+    }
+  }
+}
+
+/* Loading animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Confetti animation for achievements */
+@keyframes confetti {
+  0% { transform: translateY(0) rotateZ(0deg); opacity: 1; }
+  100% { transform: translateY(-1000px) rotateZ(720deg); opacity: 0; }
+}
+
+.confetti {
+  animation: confetti 3s ease-out forwards;
 }

@@ -107,13 +107,21 @@ export default {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
+				},
+				'confetti': {
+					'0%': { transform: 'translateY(0) rotateZ(0deg)', opacity: '1' },
+					'100%': { transform: 'translateY(-1000px) rotateZ(720deg)', opacity: '0' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-up': 'fade-up 0.6s ease-out'
-			}
+				'fade-up': 'fade-up 0.6s ease-out',
+				'confetti': 'confetti 3s ease-out forwards'
+			},
+			screens: {
+				'xs': '475px',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
