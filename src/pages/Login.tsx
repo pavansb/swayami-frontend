@@ -31,7 +31,7 @@ const Login = () => {
         
         <Button 
           onClick={handleGoogleLogin}
-          className="swayami-button w-full text-lg py-6"
+          className="bg-swayami-primary hover:bg-swayami-primary-hover w-full text-lg py-6 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
         >
           Login with Google
         </Button>

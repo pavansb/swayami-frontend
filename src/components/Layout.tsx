@@ -1,7 +1,6 @@
 
 import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,9 +29,9 @@ const Layout = ({ children }: LayoutProps) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block px-4 py-2 rounded-lg transition-colors ${
+                className={`block px-4 py-2 rounded-xl transition-colors ${
                   location.pathname === item.path
-                    ? 'bg-swayami-black text-white'
+                    ? 'bg-swayami-primary text-white'
                     : 'text-swayami-light-text hover:bg-gray-100'
                 }`}
               >
@@ -58,7 +57,7 @@ const Layout = ({ children }: LayoutProps) => {
               {navigation.find(item => item.path === location.pathname)?.name || 'Dashboard'}
             </h2>
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-swayami-black rounded-full"></div>
+              <div className="w-8 h-8 bg-swayami-primary rounded-full"></div>
             </div>
           </div>
         </header>

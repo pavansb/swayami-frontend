@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navigation = () => {
   const scrollToSection = (id: string) => {
@@ -23,9 +24,15 @@ const Navigation = () => {
           >
             See Features
           </button>
+          <Link 
+            to="/login"
+            className="text-swayami-primary hover:text-swayami-primary-hover text-sm font-medium transition-colors duration-200"
+          >
+            Login
+          </Link>
           <button 
             onClick={() => scrollToSection('waitlist')}
-            className="swayami-button text-sm"
+            className="bg-swayami-primary hover:bg-swayami-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
           >
             Join Waitlist
           </button>

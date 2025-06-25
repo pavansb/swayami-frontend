@@ -68,6 +68,8 @@ export default {
 				},
 				// Swayami brand colors
 				swayami: {
+					primary: '#9650D4',
+					'primary-hover': '#8547C4',
 					black: '#000000',
 					'light-text': '#2B2B2B',
 					border: '#E5E5E5',
