@@ -15,25 +15,29 @@ import { AppProvider } from "./contexts/AppContext";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/mindspace" element={<Mindspace />} />
+      <Route path="/progress" element={<Progress />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AppProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/mindspace" element={<Mindspace />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AppProvider>
-    </TooltipProvider>
+    <AppProvider>
+      <TooltipProvider>
+        <AppRoutes />
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </AppProvider>
   </QueryClientProvider>
 );
 
