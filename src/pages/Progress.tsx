@@ -2,9 +2,12 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Progress = () => {
-  const { tasks, goals, journalEntries } = useApp();
+  const { tasks, goals, journalEntries, user } = useApp();
+  const navigate = useNavigate();
 
   const completedTasks = tasks.filter(task => task.isCompleted).length;
   const totalTasks = tasks.length;
@@ -14,7 +17,17 @@ const Progress = () => {
   const completedGoals = goals.filter(goal => goal.status === 'completed').length;
   const goalCompletionRate = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
 
-  const reflectionStreak = journalEntries.length;
+  const reflectionStreak = user.streak;
+
+  // Calculate user level
+  const getLevelInfo = (streak: number) => {
+    if (streak >= 30) return { level: 'Self-Mastery Guru', color: 'text-yellow-600', progress: 100 };
+    if (streak >= 14) return { level: 'Mindful Practitioner', color: 'text-purple-600', progress: (streak / 30) * 100 };
+    if (streak >= 7) return { level: 'Disciplined Seeker', color: 'text-blue-600', progress: (streak / 30) * 100 };
+    return { level: 'Mindful Novice', color: 'text-green-600', progress: (streak / 30) * 100 };
+  };
+
+  const levelInfo = getLevelInfo(reflectionStreak);
 
   // Mock weekly activity data
   const weeklyData = [
@@ -30,6 +43,33 @@ const Progress = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
+        {/* Level & Streak Info */}
+        <div className="swayami-card mb-8">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-swayami-black mb-2">
+              Your Rank: <span className={levelInfo.color}>{levelInfo.level}</span>
+            </h3>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <span className="text-lg font-semibold">{reflectionStreak}</span>
+              <span className="text-2xl">🔥</span>
+              <span className="text-swayami-light-text">day streak</span>
+            </div>
+            
+            {/* Level Progress Bar */}
+            <div className="max-w-md mx-auto">
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className="bg-swayami-primary h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${levelInfo.progress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-swayami-light-text mt-2">
+                {30 - reflectionStreak} more days to next level
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="swayami-card text-center">
@@ -54,7 +94,7 @@ const Progress = () => {
 
           <div className="swayami-card text-center">
             <div className="text-3xl font-bold text-swayami-black mb-2">
-              {reflectionStreak}
+              {journalEntries.length}
             </div>
             <div className="text-swayami-light-text">Reflection Entries</div>
             <div className="text-sm text-swayami-light-text mt-1">
@@ -81,7 +121,7 @@ const Progress = () => {
                       <div className="text-sm text-swayami-black">Tasks</div>
                       <div className="flex-1 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-swayami-black h-2 rounded-full"
+                          className="bg-swayami-primary h-2 rounded-full transition-all duration-500"
                           style={{ width: `${(day.tasks / 6) * 100}%` }}
                         ></div>
                       </div>
@@ -93,7 +133,7 @@ const Progress = () => {
                       <div className="text-sm text-swayami-black">Habits</div>
                       <div className="flex-1 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-gray-400 h-2 rounded-full"
+                          className="bg-gray-400 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${(day.habits / 3) * 100}%` }}
                         ></div>
                       </div>
@@ -114,35 +154,44 @@ const Progress = () => {
             </h3>
             
             <div className="space-y-4">
-              {goals.map((goal) => (
-                <div key={goal.id} className="border-b border-swayami-border pb-4 last:border-b-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium text-swayami-black">
-                      {goal.type}
+              {goals.map((goal) => {
+                const goalTasks = tasks.filter(task => task.linkedGoal === goal.id);
+                const completedGoalTasks = goalTasks.filter(task => task.isCompleted);
+                const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
+                
+                const getStatusColor = (status: string, progress: number) => {
+                  if (status === 'completed' || progress === 100) return 'bg-green-100 text-green-800';
+                  if (progress > 50) return 'bg-yellow-100 text-yellow-800';
+                  return 'bg-red-100 text-red-800';
+                };
+
+                return (
+                  <div key={goal.id} className="border-b border-swayami-border pb-4 last:border-b-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium text-swayami-black">
+                        {goal.type}
+                      </div>
+                      <div className={`text-sm px-2 py-1 rounded ${getStatusColor(goal.status, progress)}`}>
+                        {progress === 100 ? 'Complete' : progress > 50 ? 'In Progress' : 'Stalled'}
+                      </div>
                     </div>
-                    <div className={`text-sm px-2 py-1 rounded ${
-                      goal.status === 'completed' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {goal.status}
+                    <div className="text-sm text-swayami-light-text mb-2">
+                      {goal.description || 'No description provided'}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-swayami-primary h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-swayami-light-text">
+                        {Math.round(progress)}%
+                      </span>
                     </div>
                   </div>
-                  <div className="text-sm text-swayami-light-text">
-                    {goal.description || 'No description provided'}
-                  </div>
-                  <div className="mt-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-swayami-black h-2 rounded-full"
-                        style={{ 
-                          width: goal.status === 'completed' ? '100%' : '45%' 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {goals.length === 0 && (
                 <p className="text-swayami-light-text text-center py-8">
                   Complete onboarding to see your goals here.
@@ -152,31 +201,36 @@ const Progress = () => {
           </div>
         </div>
 
-        {/* Insights */}
-        <div className="swayami-card mt-8">
-          <h3 className="text-xl font-semibold text-swayami-black mb-6">
-            Weekly Insights
+        {/* Call to Action */}
+        <div className="swayami-card mt-8 text-center">
+          <h3 className="text-xl font-semibold text-swayami-black mb-4">
+            Keep the Momentum Going!
           </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-swayami-black mb-2">Strengths</h4>
-              <ul className="space-y-1 text-swayami-light-text">
-                <li>• Consistent task completion on weekdays</li>
-                <li>• Strong habit tracking momentum</li>
-                <li>• Regular reflection practice</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-swayami-black mb-2">Areas for Growth</h4>
-              <ul className="space-y-1 text-swayami-light-text">
-                <li>• Weekend productivity could improve</li>
-                <li>• Consider adding more challenging goals</li>
-                <li>• Focus timer usage could increase</li>
-              </ul>
+          <p className="text-swayami-light-text mb-6">
+            "You're 1 reflection away from your next breakthrough."
+          </p>
+          <Button 
+            onClick={() => navigate('/mindspace')}
+            className="bg-swayami-primary hover:bg-swayami-primary-hover px-8 py-3"
+          >
+            Reflect to Boost Your Streak 🔥
+          </Button>
+        </div>
+
+        {/* Daily Reward Quote (show if all tasks completed) */}
+        {completionRate === 100 && totalTasks > 0 && (
+          <div className="swayami-card mt-8 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🏆</div>
+              <h3 className="text-xl font-semibold text-swayami-black mb-2">
+                Daily Achievement Unlocked!
+              </h3>
+              <p className="text-swayami-light-text italic">
+                "The man who moves a mountain begins by carrying away small stones." - Confucius
+              </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   );

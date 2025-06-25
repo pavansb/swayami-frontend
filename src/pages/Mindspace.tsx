@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/contexts/AppContext';
 import { Brain, Search, Sparkles, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const moods = [
   { emoji: '😊', label: 'Happy' },
@@ -18,9 +19,11 @@ const moods = [
 ];
 
 const Mindspace = () => {
-  const { addJournalEntry, journalEntries } = useApp();
+  const { addJournalEntry, updateJournalEntry, journalEntries } = useApp();
+  const { toast } = useToast();
   const [journalText, setJournalText] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{
     summary?: string;
     moodAnalysis?: string;
@@ -29,45 +32,85 @@ const Mindspace = () => {
 
   const handleSubmit = () => {
     if (journalText.trim() && selectedMood) {
-      addJournalEntry({
+      const entry = {
         mood: selectedMood,
         text: journalText,
-        extractedTasks: [],
+        extractedTasks: analysis.extractedTasks || [],
+        summary: analysis.summary,
+        moodAnalysis: analysis.moodAnalysis,
+      };
+      
+      addJournalEntry(entry);
+      toast({
+        title: "Entry Saved ✅",
+        description: "Your reflection has been saved successfully.",
       });
+      
       setJournalText('');
       setSelectedMood('');
       setAnalysis({});
+      setCurrentEntryId(null);
     }
   };
 
   const handleSummarize = () => {
+    if (!journalText.trim()) return;
+    
     // Mock AI summarization
-    setAnalysis(prev => ({
-      ...prev,
-      summary: "You're feeling reflective about your current progress and are looking for clarity on next steps. There's a sense of both accomplishment and uncertainty about the future direction."
-    }));
+    const summaries = [
+      "You're feeling reflective about your current progress and are looking for clarity on next steps. There's a sense of both accomplishment and uncertainty about the future direction.",
+      "Your thoughts reveal a desire for growth and self-improvement, with some underlying concerns about maintaining balance in your life.",
+      "You're processing recent experiences and seeking ways to optimize your daily routines for better productivity and wellbeing.",
+    ];
+    
+    const randomSummary = summaries[Math.floor(Math.random() * summaries.length)];
+    setAnalysis(prev => ({ ...prev, summary: randomSummary }));
   };
 
   const handleAnalyzeMood = () => {
+    if (!selectedMood) return;
+    
     // Mock mood analysis
-    setAnalysis(prev => ({
-      ...prev,
-      moodAnalysis: "Your mood shows a pattern of introspection mixed with determination. You tend to be more thoughtful during afternoon hours and show increased motivation after journaling sessions."
+    const analyses = {
+      'Happy': "Your positive mood indicates high energy and optimism. This is an excellent time for creative tasks and building relationships.",
+      'Sad': "You're experiencing lower energy, which is natural. Consider gentle activities like reading or light exercise to nurture yourself.",
+      'Frustrated': "Your frustration suggests you're pushing against obstacles. Channel this energy into problem-solving and breaking down barriers.",
+      'Anxious': "Your anxiety shows you care deeply about outcomes. Practice breathing exercises and focus on one task at a time.",
+      'Tired': "Your fatigue indicates you need rest. Prioritize sleep and consider what's draining your energy.",
+      'Thoughtful': "Your contemplative mood is perfect for reflection and planning. Use this time for strategic thinking.",
+      'Motivated': "Your high motivation is powerful - harness it for your most important goals while it's strong.",
+      'Calm': "Your peaceful state is ideal for meditation and mindful activities. Enjoy this centered feeling.",
+    };
+    
+    setAnalysis(prev => ({ 
+      ...prev, 
+      moodAnalysis: analyses[selectedMood as keyof typeof analyses] || "Your mood reflects your current state of mind and offers insights for your next actions."
     }));
   };
 
   const handleExtractTasks = () => {
-    // Mock task extraction
-    const tasks = [
-      "Schedule meeting with mentor",
-      "Research market opportunities",
+    if (!journalText.trim()) return;
+    
+    // Mock task extraction based on common patterns
+    const possibleTasks = [
+      "Schedule one-on-one with team member",
+      "Research industry trends",
       "Update project timeline",
-      "Plan weekend activities",
+      "Plan weekend self-care activities",
+      "Organize workspace for better focus",
+      "Reach out to mentor for guidance",
+      "Review and adjust monthly goals",
+      "Set boundaries with distractions",
+      "Practice mindfulness meditation",
+      "Exercise for stress relief",
     ];
-    setAnalysis(prev => ({
-      ...prev,
-      extractedTasks: tasks
-    }));
+    
+    // Select 3-4 random tasks
+    const tasks = possibleTasks
+      .sort(() => 0.5 - Math.random())
+      .slice(0, Math.floor(Math.random() * 2) + 3);
+    
+    setAnalysis(prev => ({ ...prev, extractedTasks: tasks }));
   };
 
   return (
@@ -135,16 +178,18 @@ const Mindspace = () => {
                     className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
                   >
                     <Search className="w-4 h-4 mr-2" />
-                    Uncover Action Items
+                    Get Smart Suggestions
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleAnalyzeMood}
-                    className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Analyze Mood
-                  </Button>
+                  {selectedMood && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleAnalyzeMood}
+                      className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Analyze Mood
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -177,7 +222,7 @@ const Mindspace = () => {
               <div className="bg-white border border-swayami-border rounded-xl p-6">
                 <h4 className="font-semibold text-swayami-black mb-3 flex items-center">
                   <Search className="w-4 h-4 mr-2 text-swayami-primary" />
-                  Action Items
+                  Smart Suggestions
                 </h4>
                 <ul className="space-y-2">
                   {analysis.extractedTasks.map((task, index) => (
@@ -202,6 +247,9 @@ const Mindspace = () => {
                       </span>
                       <span className="text-sm">
                         {moods.find(m => m.label === entry.mood)?.emoji}
+                      </span>
+                      <span className="text-xs text-swayami-light-text">
+                        {entry.mood}
                       </span>
                     </div>
                     <p className="text-sm text-swayami-light-text line-clamp-2">

@@ -6,12 +6,18 @@ import { useApp } from '@/contexts/AppContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useApp();
+  const { login, user } = useApp();
 
   const handleGoogleLogin = () => {
     // Mock Google login
     login('user@example.com');
-    navigate('/onboarding');
+    
+    // Route based on onboarding status
+    if (!user.hasCompletedOnboarding) {
+      navigate('/onboarding');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (
