@@ -41,6 +41,7 @@ interface AppContextType {
   journalEntries: JournalEntry[];
   habits: Array<{ id: string; emoji: string; label: string; completed: boolean }>;
   login: (email: string) => void;
+  loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
   completeOnboarding: (selectedGoals: { type: string; description: string }[]) => void;
   addTask: (task: Omit<Task, 'id'>) => void;
@@ -123,6 +124,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const login = (email: string) => {
     setUser({
       email,
+      isLoggedIn: true,
+      hasCompletedOnboarding: false,
+      streak: 0,
+      level: 'Mindful Novice',
+    });
+  };
+
+  const loginWithToken = (userData: { id: string; email: string; name?: string }) => {
+    setUser({
+      email: userData.email,
       isLoggedIn: true,
       hasCompletedOnboarding: false,
       streak: 0,
@@ -299,6 +310,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         journalEntries,
         habits,
         login,
+        loginWithToken,
         logout,
         completeOnboarding,
         addTask,
