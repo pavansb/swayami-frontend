@@ -2,20 +2,46 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { useApp } from '@/contexts/AppContext';
 import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user } = useApp();
+  const { user, loginWithToken } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // Check if user is already logged in
+    if (user && user.isLoggedIn) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Login the user in our app context
+          loginWithToken({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name || session.user.email || ''
+          });
+          
+          toast({
+            title: "Welcome!",
+            description: "Successfully signed in with Google.",
+          });
+          
+          navigate('/dashboard');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [user, navigate, loginWithToken]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -24,7 +50,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/login`
         }
       });
 
@@ -32,7 +58,7 @@ const Login = () => {
         console.error('Google sign-in error:', error);
         toast({
           title: "Sign-in Error",
-          description: "Failed to sign in with Google. Please try again.",
+          description: error.message || "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         });
       }
@@ -80,6 +106,12 @@ const Login = () => {
             </svg>
             {isLoading ? 'Signing in...' : 'Sign in with Google'}
           </Button>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-[#4A4A4A]">
+              Don't have an account? Signing in will automatically create one for you.
+            </p>
+          </div>
         </div>
       </div>
 
