@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/utils/supabaseClient';
 
 interface Goal {
   id: string;
@@ -99,6 +100,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     ];
   });
 
+  // Check for Supabase session on app load
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        localStorage.setItem('swayami_token', session.access_token);
+        setUser(prev => ({
+          ...prev,
+          email: session.user.email,
+          isLoggedIn: true,
+        }));
+      }
+    };
+
+    checkSession();
+  }, []);
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem('swayami_user', JSON.stringify(user));
@@ -130,7 +148,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('swayami_token');
     setUser({
       isLoggedIn: false,
       hasCompletedOnboarding: false,
@@ -142,6 +162,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('swayami_tasks');
     localStorage.removeItem('swayami_journal');
     localStorage.removeItem('swayami_habits');
+    window.location.href = '/';
   };
 
   const completeOnboarding = (selectedGoals: { type: string; description: string }[]) => {
