@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, loginWithSupabase } = useApp();
+  const { user } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
