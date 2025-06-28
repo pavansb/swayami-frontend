@@ -2,11 +2,11 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
 import HeroSection from '../components/HeroSection';
-import WhoItsForSection from '../components/WhoItsForSection';
-import FeatureSection from '../components/FeatureSection';
-import HowItWorksSection from '../components/HowItWorksSection';
-import SocialProofSection from '../components/SocialProofSection';
-import CTASection from '../components/CTASection';
+import AudienceSection from '../components/AudienceSection';
+import ModernFeatureSection from '../components/ModernFeatureSection';
+import TimelineSection from '../components/TimelineSection';
+import TestimonialsSection from '../components/TestimonialsSection';
+import StickyCTASection from '../components/StickyCTASection';
 import WaitlistSection from '../components/WaitlistSection';
 import FAQSection from '../components/FAQSection';
 import Footer from '../components/Footer';
@@ -16,14 +16,14 @@ const Index = () => {
   useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white">
       <Navigation />
       <HeroSection />
-      <WhoItsForSection />
-      <FeatureSection />
-      <HowItWorksSection />
-      <SocialProofSection />
-      <CTASection />
+      <AudienceSection />
+      <ModernFeatureSection />
+      <TimelineSection />
+      <TestimonialsSection />
+      <StickyCTASection />
       <WaitlistSection />
       <FAQSection />
       <Footer />

@@ -11,38 +11,38 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="w-full py-6 border-b border-swayami-border bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="swayami-container flex items-center justify-between">
+    <nav className="w-full py-4 bg-white/95 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center">
           <img 
-            src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
+            src="/lovable-uploads/9cf37de0-ba28-4f72-9b5c-2c838d6562f4.png" 
             alt="Swayami" 
             className="h-8 w-auto"
           />
         </div>
         
-        <div className="flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-8">
           <button 
             onClick={() => scrollToSection('how-it-works')}
-            className="swayami-button-ghost text-sm font-medium"
+            className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             How It Works
           </button>
           <button 
             onClick={() => scrollToSection('testimonials')}
-            className="swayami-button-ghost text-sm font-medium"
+            className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             Testimonials
           </button>
           <Link 
             to="/login"
-            className="text-swayami-primary hover:text-swayami-primary-hover text-sm font-medium transition-colors duration-200"
+            className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             Login
           </Link>
           <button 
             onClick={() => scrollToSection('waitlist')}
-            className="bg-swayami-primary hover:bg-swayami-primary-hover text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
+            className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg"
           >
             Join Waitlist
           </button>
