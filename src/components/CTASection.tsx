@@ -1,12 +1,12 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CTASection = () => {
-  const scrollToWaitlist = () => {
-    const element = document.getElementById('waitlist');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+  const navigate = useNavigate();
+  
+  const handleStartToday = () => {
+    navigate('/login');
   };
 
   return (
@@ -20,10 +20,13 @@ const CTASection = () => {
             Join 100+ early users already building self-discipline with Swayami.
           </p>
           <button 
-            onClick={scrollToWaitlist}
-            className="bg-white text-swayami-primary hover:bg-gray-100 text-xl font-semibold px-12 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px]"
+            onClick={handleStartToday}
+            className="bg-white text-swayami-primary hover:bg-gray-100 text-xl font-semibold px-12 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px] relative"
           >
-            Join the Waitlist →
+            Start Today →
+            <span className="absolute -top-3 -right-3 bg-orange-500 text-white text-sm px-3 py-1 rounded-full font-bold">
+              BETA
+            </span>
           </button>
         </div>
       </div>

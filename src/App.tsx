@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
+import TaskGeneration from "./pages/TaskGeneration";
 import Dashboard from "./pages/Dashboard";
 import Mindspace from "./pages/Mindspace";
 import Progress from "./pages/Progress";
@@ -23,27 +24,32 @@ const AppRoutes = () => (
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiresOnboarding={false}>
           <Onboarding />
         </ProtectedRoute>
       } />
+      <Route path="/task-generation" element={
+        <ProtectedRoute requiresOnboarding={false}>
+          <TaskGeneration />
+        </ProtectedRoute>
+      } />
       <Route path="/dashboard" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiresOnboarding={true}>
           <Dashboard />
         </ProtectedRoute>
       } />
       <Route path="/mindspace" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiresOnboarding={true}>
           <Mindspace />
         </ProtectedRoute>
       } />
       <Route path="/progress" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiresOnboarding={true}>
           <Progress />
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiresOnboarding={true}>
           <Settings />
         </ProtectedRoute>
       } />

@@ -1,28 +1,60 @@
-
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiresOnboarding?: boolean;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, isLoading } = useApp();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requiresOnboarding = true 
+}) => {
+  const { user, goals, isLoading } = useApp();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    // Don't redirect while loading
+    if (isLoading) return;
+
+    // Check authentication first
+    if (!user || !user.isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+
+    // Check onboarding completion if required
+    if (requiresOnboarding) {
+      const hasCompletedOnboarding = goals.length > 0;
+      
+      if (!hasCompletedOnboarding) {
+        navigate('/onboarding');
+        return;
+      }
+    }
+  }, [user, goals, isLoading, navigate, requiresOnboarding]);
+
+  // Show loading state while checking authentication/onboarding
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-swayami-primary mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9650D4] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
+  // Don't render if user isn't authenticated
   if (!user || !user.isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    return null;
+  }
+
+  // Don't render if onboarding is required but not completed
+  if (requiresOnboarding && goals.length === 0) {
+    return null;
   }
 
   return <>{children}</>;

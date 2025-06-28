@@ -1,4 +1,3 @@
-
 import React, { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ProfileDropdown from './ProfileDropdown';
@@ -27,7 +26,7 @@ const Layout = ({ children }: LayoutProps) => {
             <img 
               src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
               alt="Swayami" 
-              className="h-8 w-auto"
+              className="h-12 w-auto"
             />
           </div>
           
@@ -64,7 +63,7 @@ const Layout = ({ children }: LayoutProps) => {
             <img 
               src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
               alt="Swayami" 
-              className="h-6 w-auto"
+              className="h-10 w-auto"
             />
             <div className="flex items-center space-x-4">
               <ProfileDropdown />

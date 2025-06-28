@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -83,12 +82,12 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 max-w-full">
         {/* My Goals Section */}
         <Collapsible open={goalsExpanded} onOpenChange={setGoalsExpanded}>
-          <div className="swayami-card">
+          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
             <CollapsibleTrigger className="flex items-center justify-between w-full">
-              <h3 className="text-xl font-semibold text-swayami-black dark:text-white">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                 My Goals
               </h3>
               {goalsExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -96,55 +95,55 @@ const Dashboard = () => {
             
             <CollapsibleContent className="mt-4">
               {goals.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-swayami-light-text dark:text-gray-400 mb-4">
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-gray-600 mb-4">
                     No goals yet. Complete onboarding to set your goals.
                   </p>
                   <Button 
                     onClick={() => navigate('/onboarding')}
-                    className="bg-swayami-primary hover:bg-swayami-primary-hover"
+                    className="bg-[#9650D4] hover:bg-[#8547C4] px-6 py-2.5 rounded-xl font-semibold"
                   >
                     Set Your Goals
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {goals.map((goal) => {
                     const goalTasks = tasks.filter(task => task.goal_id === goal.id);
                     const completedGoalTasks = goalTasks.filter(task => task.status === 'completed');
                     const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
                     
                     return (
-                      <div key={goal.id} className="border border-swayami-border dark:border-gray-700 rounded-xl p-4">
+                      <div key={goal.id} className="border border-gray-200 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-swayami-black dark:text-white">{goal.title}</h4>
-                          <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="w-4 h-4" />
+                          <h4 className="font-medium text-gray-900 text-sm sm:text-base">{goal.title}</h4>
+                          <div className="flex space-x-1">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Archive className="w-4 h-4" />
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Archive className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm text-swayami-light-text dark:text-gray-400 mb-3">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-3">
                           {goal.description || 'No description provided'}
                         </p>
                         <div className="flex items-center space-x-2">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
                             <div 
-                              className="bg-swayami-primary h-2 rounded-full transition-all duration-500"
+                              className="bg-[#9650D4] h-2 rounded-full transition-all duration-500"
                               style={{ width: `${progress}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-swayami-light-text dark:text-gray-400">
+                          <span className="text-xs sm:text-sm text-gray-600">
                             {Math.round(progress)}%
                           </span>
                         </div>
                         <div className={`text-xs mt-2 px-2 py-1 rounded-full inline-block ${
-                          goal.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                          goal.status === 'active' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                          goal.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                          goal.status === 'active' ? 'bg-blue-100 text-blue-800' : 
+                          'bg-gray-100 text-gray-800'
                         }`}>
                           {goal.status}
                         </div>
@@ -158,106 +157,115 @@ const Dashboard = () => {
         </Collapsible>
 
         {/* Tabbed Dashboard */}
-        <div className="swayami-card">
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
           <Tabs defaultValue="plan" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="plan">PLAN</TabsTrigger>
-              <TabsTrigger value="progress">PROGRESS</TabsTrigger>
-              <TabsTrigger value="reflect">REFLECT</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-12">
+              <TabsTrigger value="plan" className="text-xs sm:text-sm font-semibold">PLAN</TabsTrigger>
+              <TabsTrigger value="progress" className="text-xs sm:text-sm font-semibold">PROGRESS</TabsTrigger>
+              <TabsTrigger value="reflect" className="text-xs sm:text-sm font-semibold">REFLECT</TabsTrigger>
             </TabsList>
 
             {/* PLAN Tab */}
-            <TabsContent value="plan" className="space-y-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+            <TabsContent value="plan" className="space-y-4 sm:space-y-6">
+              <div className="text-center mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Today's Plan, Rooted in Your Intentions
                 </h2>
-                <p className="text-swayami-light-text dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600">
                   Focus on what matters most today
                 </p>
               </div>
 
-              <div className="flex justify-end mb-6">
+              <div className="flex justify-end mb-4 sm:mb-6">
                 <Button
                   onClick={regenerateRecommendations}
                   variant="outline"
                   size="sm"
-                  className="border-swayami-primary text-swayami-primary hover:bg-purple-50 dark:hover:bg-purple-900"
+                  className="border-[#9650D4] text-[#9650D4] hover:bg-purple-50 text-xs sm:text-sm"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                   Regenerate Suggestions
                 </Button>
               </div>
               
               {Object.entries(tasksByGoal).map(([goalType, goalTasks]) => (
-                <div key={goalType} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6">
+                <div key={goalType} className="bg-gray-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-3">🎯</span>
-                    <h3 className="text-xl font-semibold text-swayami-black dark:text-white">{goalType}</h3>
+                    <span className="text-xl sm:text-2xl mr-3">🎯</span>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{goalType}</h3>
                   </div>
                   
                   <div className="space-y-3 mb-4">
                     {goalTasks.map((task) => (
                       <div 
                         key={task.id} 
-                        className="flex items-center space-x-3 p-4 rounded-lg border border-swayami-border dark:border-gray-700 hover:shadow-md transition-shadow bg-white dark:bg-gray-700"
+                        className="flex items-center space-x-3 p-3 sm:p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow bg-white"
                       >
                         <Checkbox
                           checked={task.status === 'completed'}
                           onCheckedChange={() => toggleTask(task.id)}
+                          className="flex-shrink-0"
                         />
                         
                         {editingTask === task.id ? (
-                          <div className="flex-1 flex space-x-2">
+                          <div className="flex-1 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                             <Input
                               value={editTitle}
                               onChange={(e) => setEditTitle(e.target.value)}
                               onKeyPress={(e) => e.key === 'Enter' && saveEditTask()}
-                              className="flex-1"
+                              className="flex-1 h-9"
                             />
-                            <Button size="sm" onClick={saveEditTask}>Save</Button>
+                            <Button size="sm" onClick={saveEditTask} className="h-9 px-4">Save</Button>
                           </div>
                         ) : (
                           <>
                             <span 
-                              className={`flex-1 ${
+                              className={`flex-1 text-sm sm:text-base ${
                                 task.status === 'completed'
-                                  ? 'line-through text-swayami-light-text dark:text-gray-400' 
-                                  : 'text-swayami-black dark:text-white'
+                                  ? 'line-through text-gray-500' 
+                                  : 'text-gray-900'
                               }`}
                             >
                               {task.title}
                             </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditTask(task.id, task.title)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteTask(task.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex space-x-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditTask(task.id, task.title)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTask(task.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            </div>
                           </>
                         )}
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Input
                       placeholder={`Add task to ${goalType}...`}
                       value={newTaskTitles[goalType] || ''}
                       onChange={(e) => setNewTaskTitles(prev => ({ ...prev, [goalType]: e.target.value }))}
                       onKeyPress={(e) => e.key === 'Enter' && handleAddTask(goalType)}
-                      className="flex-1"
+                      className="flex-1 h-10"
                     />
-                    <Button onClick={() => handleAddTask(goalType)} className="bg-swayami-primary hover:bg-swayami-primary-hover">
-                      <Plus className="w-4 h-4" />
+                    <Button 
+                      onClick={() => handleAddTask(goalType)} 
+                      className="bg-[#9650D4] hover:bg-[#8547C4] h-10 px-4 flex-shrink-0"
+                    >
+                      <Plus className="w-4 h-4 sm:w-4 sm:h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Add Task</span>
                     </Button>
                   </div>
                 </div>
@@ -265,19 +273,39 @@ const Dashboard = () => {
             </TabsContent>
 
             {/* PROGRESS Tab */}
-            <TabsContent value="progress" className="space-y-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+            <TabsContent value="progress" className="space-y-4 sm:space-y-6">
+              <div className="text-center mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Track What You're Becoming
                 </h2>
-                <p className="text-swayami-light-text dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600">
                   Every step forward counts
                 </p>
               </div>
 
-              <div className="text-center mb-6">
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <svg className="w-32 h-32 transform -rotate-90">
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 sm:mb-6">
+                  <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90">
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="#E5E5E5"
+                      strokeWidth="8"
+                      fill="none"
+                      className="sm:hidden"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="#9650D4"
+                      strokeWidth="8"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - completionPercentage / 100)}`}
+                      className="transition-all duration-500 sm:hidden"
+                    />
                     <circle
                       cx="64"
                       cy="64"
@@ -285,6 +313,7 @@ const Dashboard = () => {
                       stroke="#E5E5E5"
                       strokeWidth="12"
                       fill="none"
+                      className="hidden sm:block"
                     />
                     <circle
                       cx="64"
@@ -295,34 +324,34 @@ const Dashboard = () => {
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 56}`}
                       strokeDashoffset={`${2 * Math.PI * 56 * (1 - completionPercentage / 100)}`}
-                      className="transition-all duration-500"
+                      className="transition-all duration-500 hidden sm:block"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-swayami-black dark:text-white">
+                    <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                       {completionPercentage}%
                     </span>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-2xl font-bold text-swayami-primary">{completedTasks}/{totalTasks}</div>
-                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Tasks Completed</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                  <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="text-xl sm:text-2xl font-bold text-[#9650D4]">{completedTasks}/{totalTasks}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Tasks Completed</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-2xl font-bold text-swayami-primary">{user?.streak || 0} 🔥</div>
-                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Day Streak</div>
+                  <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="text-xl sm:text-2xl font-bold text-[#9650D4]">{user?.streak || 0} 🔥</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Day Streak</div>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-lg font-bold text-swayami-primary">{user?.level || 'Mindful Novice'}</div>
-                    <div className="text-sm text-swayami-light-text dark:text-gray-400">Current Rank</div>
+                  <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
+                    <div className="text-base sm:text-lg font-bold text-[#9650D4]">{user?.level || 'Mindful Novice'}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Current Rank</div>
                   </div>
                 </div>
 
                 {completionPercentage < 100 && (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 rounded-lg p-4 mb-6">
-                    <p className="font-medium text-swayami-primary dark:text-purple-300">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                    <p className="font-medium text-[#9650D4] text-sm sm:text-base">
                       Finish Strong Today 💪
                     </p>
                   </div>
@@ -330,20 +359,21 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <h3 className="font-semibold text-swayami-black dark:text-white mb-4">Daily Habits</h3>
+                <h3 className="font-semibold text-gray-900 mb-4 text-base sm:text-lg">Daily Habits</h3>
                 <div className="space-y-3">
                   {habits.map((habit) => (
-                    <div key={habit.id} className="flex items-center space-x-3 p-3 rounded-lg border border-swayami-border dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <div key={habit.id} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white">
                       <Checkbox
                         checked={habit.completed}
                         onCheckedChange={() => toggleHabit(habit.id)}
+                        className="flex-shrink-0"
                       />
-                      <span className="text-xl">{habit.emoji}</span>
+                      <span className="text-lg sm:text-xl">{habit.emoji}</span>
                       <span 
-                        className={`flex-1 ${
+                        className={`flex-1 text-sm sm:text-base ${
                           habit.completed 
-                            ? 'line-through text-swayami-light-text dark:text-gray-400' 
-                            : 'text-swayami-black dark:text-white'
+                            ? 'line-through text-gray-500' 
+                            : 'text-gray-900'
                         }`}
                       >
                         {habit.label}
@@ -355,62 +385,56 @@ const Dashboard = () => {
             </TabsContent>
 
             {/* REFLECT Tab */}
-            <TabsContent value="reflect" className="space-y-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-swayami-black dark:text-white mb-2">
+            <TabsContent value="reflect" className="space-y-4 sm:space-y-6">
+              <div className="text-center mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Pause. Write. Understand.
                 </h2>
-                <p className="text-swayami-light-text dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600">
                   Transform your thoughts into clarity
                 </p>
               </div>
               
               {lastJournalEntry ? (
-                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <div className="mb-4 sm:mb-6 p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-sm text-swayami-light-text dark:text-gray-400">Last entry:</span>
-                    <span className="font-medium dark:text-white">
+                    <span className="text-xs sm:text-sm text-gray-600">Last entry:</span>
+                    <span className="font-medium text-gray-900 text-xs sm:text-sm">
                       {new Date(lastJournalEntry.created_at || '').toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm text-swayami-light-text dark:text-gray-400 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                     {lastJournalEntry.content.slice(0, 100)}...
                   </p>
                 </div>
               ) : (
-                <p className="text-center text-swayami-light-text dark:text-gray-400 mb-6">
+                <p className="text-center text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                   No reflections yet. Start your mindfulness journey!
                 </p>
               )}
               
               <Button 
                 onClick={() => navigate('/mindspace')}
-                className="w-full bg-swayami-primary hover:bg-swayami-primary-hover mb-6"
+                className="w-full bg-[#9650D4] hover:bg-[#8547C4] mb-4 sm:mb-6 h-12 text-sm sm:text-base font-semibold"
               >
                 Write a New Reflection
               </Button>
 
               {/* Daily Motivation Quote */}
-              <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/50 dark:to-pink-900/50 rounded-xl">
+              <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-swayami-black dark:text-white">Daily Motivation</h4>
+                  <h4 className="font-medium text-gray-900 text-sm sm:text-base">Daily Motivation</h4>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={rotateQuote}
-                    className="text-swayami-primary hover:bg-purple-100 dark:hover:bg-purple-800"
+                    className="h-8 w-8 p-0"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
-                <p className="text-sm text-swayami-light-text dark:text-gray-300 italic leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-700 italic leading-relaxed">
                   {motivationQuotes[currentQuote]}
-                </p>
-              </div>
-              
-              <div className="pt-6 border-t border-swayami-border dark:border-gray-700">
-                <p className="text-sm text-swayami-light-text dark:text-gray-400 text-center italic">
-                  "You're 1 reflection away from your next breakthrough."
                 </p>
               </div>
             </TabsContent>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -81,9 +80,9 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <img 
-              src="/lovable-uploads/9cf37de0-ba28-4f72-9b5c-2c838d6562f4.png" 
+              src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
               alt="Swayami" 
-              className="h-16 w-auto mx-auto mb-8"
+              className="h-32 w-auto mx-auto mb-8"
             />
             <h1 className="text-3xl font-bold text-[#1A1A1A] mb-4">
               Welcome Back!
