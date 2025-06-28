@@ -20,7 +20,7 @@ interface GoalWithTasks {
 const TaskGeneration = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { goals, addTask, completeOnboarding } = useApp();
+  const { goals, addTask, completeOnboarding, loadUserData } = useApp();
   const [goalsWithTasks, setGoalsWithTasks] = useState<GoalWithTasks[]>([]);
   const [isGenerating, setIsGenerating] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState<string | null>(null);
@@ -142,18 +142,40 @@ const TaskGeneration = () => {
     setIsCompleting(true);
     
     try {
+      let savedGoals = goals;
+      
+      console.log('TaskGeneration: Starting setup completion', {
+        hasLocationGoals: !!location.state?.goals,
+        currentGoalsLength: goals.length
+      });
+      
       // First, complete onboarding if we have goals from onboarding
       if (location.state?.goals) {
+        console.log('TaskGeneration: Completing onboarding with goals:', location.state.goals);
         await completeOnboarding(location.state.goals);
+        
+        // Wait for goals to be properly saved
+        let attempts = 0;
+        while (attempts < 15 && savedGoals.length === 0) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          await loadUserData(); // Refresh the data from Supabase
+          if (goals.length > 0) {
+            savedGoals = goals;
+            console.log('TaskGeneration: Goals loaded successfully after', attempts + 1, 'attempts');
+            break;
+          }
+          attempts++;
+        }
+        
+        if (savedGoals.length === 0) {
+          console.warn('TaskGeneration: Goals still not loaded after all attempts');
+        }
       }
-
-      // Wait a moment for goals to be created
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Add selected tasks to Supabase
       for (const goalWithTasks of goalsWithTasks) {
         // Find the corresponding goal ID from the context
-        const matchingGoal = goals.find(g => 
+        const matchingGoal = savedGoals.find(g => 
           g.title === goalWithTasks.goalTitle || 
           g.id === goalWithTasks.goalId
         );
@@ -163,6 +185,8 @@ const TaskGeneration = () => {
         const selectedTasksData = goalWithTasks.tasks.filter((_, index) => 
           goalWithTasks.selectedTasks[index]
         );
+
+        console.log('TaskGeneration: Adding tasks for goal:', goalWithTasks.goalTitle, 'Tasks:', selectedTasksData.length);
 
         for (const task of selectedTasksData) {
           await addTask({
@@ -180,7 +204,23 @@ const TaskGeneration = () => {
         description: "Your personalized tasks have been added to your dashboard.",
       });
 
+      console.log('TaskGeneration: About to navigate to dashboard');
+      
+      // Wait a bit for React state updates to process before navigating
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Navigate to dashboard
+      console.log('TaskGeneration: Calling navigate to dashboard');
       navigate('/dashboard');
+      
+      // Backup: If navigation doesn't work after 2 seconds, force reload to dashboard
+      setTimeout(() => {
+        if (window.location.pathname !== '/dashboard') {
+          console.log('TaskGeneration: Navigation failed, forcing page reload to dashboard');
+          window.location.href = '/dashboard';
+        }
+      }, 2000);
+      
     } catch (error) {
       console.error('Error saving tasks:', error);
       toast({

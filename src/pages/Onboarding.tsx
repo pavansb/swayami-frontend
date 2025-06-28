@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const goalTypes = [
   { id: 'personal', emoji: '🧘', title: 'Personal Wellbeing' },
@@ -53,8 +54,15 @@ const examplePrompts = {
   ]
 };
 
-const ExamplePrompts = ({ selectedGoals }: { selectedGoals: string[] }) => {
+const ExamplePrompts = ({ 
+  selectedGoals, 
+  onSuggestionClick 
+}: { 
+  selectedGoals: string[];
+  onSuggestionClick: (goalId: string, suggestion: string) => void;
+}) => {
   const [currentExamples, setCurrentExamples] = useState<Record<string, number>>({});
+  const [isRegenerating, setIsRegenerating] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,10 +75,22 @@ const ExamplePrompts = ({ selectedGoals }: { selectedGoals: string[] }) => {
         });
         return newExamples;
       });
-    }, 4000); // Rotate every 4 seconds
+    }, 6000); // Slower rotation for better readability
 
     return () => clearInterval(interval);
   }, [selectedGoals]);
+
+  const regenerateSuggestions = (goalId: string) => {
+    setIsRegenerating(goalId);
+    setCurrentExamples(prev => {
+      const examples = examplePrompts[goalId as keyof typeof examplePrompts] || [];
+      return {
+        ...prev,
+        [goalId]: Math.floor(Math.random() * examples.length)
+      };
+    });
+    setTimeout(() => setIsRegenerating(null), 800);
+  };
 
   if (selectedGoals.length === 0) {
     return (
@@ -112,19 +132,31 @@ const ExamplePrompts = ({ selectedGoals }: { selectedGoals: string[] }) => {
                 key={goalId}
                 className="bg-white/70 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white/50 transition-all duration-500"
               >
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">{goalType.emoji}</span>
-                  <h4 className="font-semibold text-gray-800 text-sm">
-                    {goalType.title}
-                  </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">{goalType.emoji}</span>
+                    <h4 className="font-semibold text-gray-800 text-sm">
+                      {goalType.title}
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => regenerateSuggestions(goalId)}
+                    disabled={isRegenerating === goalId}
+                    className="p-1.5 rounded-lg hover:bg-white/50 transition-colors disabled:opacity-50"
+                    title="Generate new suggestions"
+                  >
+                    <Sparkles className={`w-4 h-4 text-[#9650D4] ${isRegenerating === goalId ? 'animate-spin' : ''}`} />
+                  </button>
                 </div>
                 <div 
                   key={currentIndex} // Force re-render for animation
-                  className="text-gray-700 text-sm leading-relaxed animate-in fade-in duration-500"
+                  onClick={() => onSuggestionClick(goalId, currentExample)}
+                  className="text-gray-700 text-sm leading-relaxed animate-in fade-in duration-500 cursor-pointer hover:bg-white/30 rounded-lg p-2 transition-colors border border-transparent hover:border-[#9650D4]/30"
+                  title="Click to use this suggestion"
                 >
                   "{currentExample}"
                 </div>
-                <div className="flex justify-center mt-3">
+                <div className="flex justify-between items-center mt-3">
                   <div className="flex space-x-1">
                     {examples.map((_, index) => (
                       <div
@@ -137,6 +169,7 @@ const ExamplePrompts = ({ selectedGoals }: { selectedGoals: string[] }) => {
                       />
                     ))}
                   </div>
+                  <span className="text-xs text-gray-500">Click to use</span>
                 </div>
               </div>
             );
@@ -144,9 +177,17 @@ const ExamplePrompts = ({ selectedGoals }: { selectedGoals: string[] }) => {
         </div>
         
         <div className="mt-8 p-4 bg-white/50 rounded-xl border border-white/50">
-          <p className="text-xs text-gray-600 text-center">
-            💡 Use these as inspiration for your own goals. Be specific about what you want to achieve!
-          </p>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-[#9650D4]" />
+              <span className="text-xs font-semibold text-gray-700">Pro Tips</span>
+            </div>
+            <p className="text-xs text-gray-600">
+              💡 Click suggestions to add them instantly<br />
+              🔄 Use the sparkle button to generate new ideas<br />
+              ✏️ Edit and personalize as needed!
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -166,6 +207,28 @@ const Onboarding = () => {
         ? prev.filter(id => id !== goalId)
         : [...prev, goalId]
     );
+  };
+
+  const handleSuggestionClick = (goalId: string, suggestion: string) => {
+    setGoalDescriptions(prev => ({
+      ...prev,
+      [goalId]: suggestion
+    }));
+    
+    const goalType = goalTypes.find(g => g.id === goalId);
+    toast({
+      title: "Suggestion Added! ✨",
+      description: `Added suggestion to ${goalType?.title || 'your goal'}`,
+    });
+    
+    // Add a smooth scroll to the textarea for this goal
+    setTimeout(() => {
+      const element = document.getElementById(`goal-textarea-${goalId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
+    }, 100);
   };
 
   const handleNext = () => {
@@ -258,22 +321,37 @@ const Onboarding = () => {
                 const goal = goalTypes.find(g => g.id === goalId);
                 if (!goal) return null;
 
+                const hasContent = goalDescriptions[goalId]?.length > 0;
+                
                 return (
-                  <div key={goalId} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <div key={goalId} className={`bg-white border-2 rounded-2xl p-6 shadow-sm transition-all duration-300 ${
+                    hasContent ? 'border-[#9650D4] bg-purple-50/30' : 'border-gray-200'
+                  }`}>
                     <div className="flex items-center mb-4">
                       <span className="text-2xl mr-3">{goal.emoji}</span>
                       <h3 className="text-lg font-semibold text-gray-900">
                         {goal.title}
                       </h3>
+                      {hasContent && (
+                        <div className="ml-auto flex items-center text-[#9650D4] text-sm">
+                          <Sparkles className="w-4 h-4 mr-1" />
+                          Ready
+                        </div>
+                      )}
                     </div>
                     <Textarea
+                      id={`goal-textarea-${goalId}`}
                       placeholder={`What does ${goal.title.toLowerCase()} look like for you? Be specific about your goals and timeline.`}
                       value={goalDescriptions[goalId] || ''}
                       onChange={(e) => setGoalDescriptions(prev => ({
                         ...prev,
                         [goalId]: e.target.value
                       }))}
-                      className="min-h-24 resize-none border-gray-200 focus:border-[#9650D4] focus:ring-[#9650D4]"
+                      className={`min-h-24 resize-none transition-all duration-200 ${
+                        hasContent 
+                          ? 'border-[#9650D4] focus:border-[#9650D4] focus:ring-[#9650D4] bg-white' 
+                          : 'border-gray-200 focus:border-[#9650D4] focus:ring-[#9650D4]'
+                      }`}
                     />
                   </div>
                 );
@@ -281,9 +359,18 @@ const Onboarding = () => {
             </div>
 
             <div className="text-center mt-12">
+              <div className="mb-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                  <span>{selectedGoals.filter(goalId => goalDescriptions[goalId]?.length > 0).length}</span>
+                  <span>of</span>
+                  <span>{selectedGoals.length}</span>
+                  <span>goals detailed</span>
+                </div>
+              </div>
               <Button 
                 onClick={handleComplete}
-                className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg"
+                disabled={selectedGoals.some(goalId => !goalDescriptions[goalId]?.trim())}
+                className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Let's Begin
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -293,7 +380,10 @@ const Onboarding = () => {
         </div>
 
         {/* Example Prompts Side Panel */}
-        <ExamplePrompts selectedGoals={selectedGoals} />
+        <ExamplePrompts 
+          selectedGoals={selectedGoals} 
+          onSuggestionClick={handleSuggestionClick}
+        />
       </div>
     </div>
   );

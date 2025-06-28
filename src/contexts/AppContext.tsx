@@ -248,17 +248,71 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const completeOnboarding = async (selectedGoals: { type: string; description: string }[]) => {
-    if (!supabaseUser) return;
+    if (!supabaseUser) {
+      console.log('AppContext: No supabase user, cannot complete onboarding');
+      return;
+    }
+
+    console.log('AppContext: Starting onboarding completion for', selectedGoals.length, 'goals');
 
     try {
-      const goalsToInsert = selectedGoals.map(goal => ({
+      // Check if user record exists in users table
+      const { data: existingUser, error: userCheckError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (userCheckError || !existingUser) {
+        console.log('AppContext: User record does not exist, creating it...', userCheckError);
+        
+        // Create user record
+        const userToInsert = {
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          full_name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'User'
+        };
+        
+        const { data: createdUser, error: userCreateError } = await supabase
+          .from('users')
+          .insert([userToInsert])
+          .select()
+          .single();
+
+        if (userCreateError) {
+          console.error('AppContext: Failed to create user record:', userCreateError);
+        } else {
+          console.log('AppContext: User record created successfully');
+        }
+      } else {
+        console.log('AppContext: User record exists:', existingUser);
+      }
+
+      // Then, check if user already has goals and clear them to prevent conflicts
+      const { data: existingGoals } = await supabase
+        .from('goals')
+        .select('id')
+        .eq('user_id', supabaseUser.id);
+
+      if (existingGoals && existingGoals.length > 0) {
+        console.log('AppContext: Deleting existing goals to prevent conflicts:', existingGoals.length);
+        await supabase
+          .from('goals')
+          .delete()
+          .eq('user_id', supabaseUser.id);
+      }
+
+      const goalsToInsert = selectedGoals.map((goal, index) => ({
         user_id: supabaseUser.id,
         title: goal.type,
-        description: goal.description,
+        description: goal.description || '',
         status: 'active' as const,
         priority: 'medium',
         progress: 0,
+        category: goal.type.toLowerCase().replace(/[^a-z0-9]/g, '_'),
       }));
+      
+      console.log('AppContext: Inserting goals to Supabase');
 
       const { data: insertedGoals, error } = await supabase
         .from('goals')
@@ -267,14 +321,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error creating goals:', error);
-        return;
+        console.error('Goals insertion failed with data:', goalsToInsert);
+        console.error('User ID being used:', supabaseUser.id);
+        
+        // Check if it's a foreign key constraint error
+        if (error.code === '23503') {
+          console.error('Foreign key constraint violation - user_id not found in users table');
+          throw new Error('User profile not found. Please try logging out and back in.');
+        }
+        
+        throw new Error(`Failed to create goals: ${error.message}`);
       }
+
+      console.log('AppContext: Goals inserted successfully:', insertedGoals);
 
       setGoals((insertedGoals || []).map(goal => ({
         ...goal,
         status: goal.status as 'active' | 'completed' | 'stalled'
       })));
-      setUser(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
+      
+      console.log('AppContext: Setting user hasCompletedOnboarding to true');
+      setUser(prev => {
+        const updatedUser = prev ? { ...prev, hasCompletedOnboarding: true } : null;
+        console.log('AppContext: Updated user state:', updatedUser);
+        return updatedUser;
+      });
 
       // Generate AI-recommended tasks
       if (insertedGoals) {

@@ -20,17 +20,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     // Check authentication first
     if (!user || !user.isLoggedIn) {
+      console.log('ProtectedRoute: User not authenticated, redirecting to login');
       navigate('/login');
       return;
     }
 
     // Check onboarding completion if required
     if (requiresOnboarding) {
-      const hasCompletedOnboarding = goals.length > 0;
+      const hasCompletedOnboarding = user.hasCompletedOnboarding || goals.length > 0;
+      
+      console.log('ProtectedRoute: Checking onboarding completion', {
+        hasCompletedOnboarding: user.hasCompletedOnboarding,
+        goalsLength: goals.length,
+        finalResult: hasCompletedOnboarding
+      });
       
       if (!hasCompletedOnboarding) {
+        console.log('ProtectedRoute: Onboarding not completed, redirecting to onboarding');
         navigate('/onboarding');
         return;
+      } else {
+        console.log('ProtectedRoute: Onboarding completed, allowing access');
       }
     }
   }, [user, goals, isLoading, navigate, requiresOnboarding]);
@@ -53,7 +63,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Don't render if onboarding is required but not completed
-  if (requiresOnboarding && goals.length === 0) {
+  if (requiresOnboarding && !user.hasCompletedOnboarding && goals.length === 0) {
     return null;
   }
 

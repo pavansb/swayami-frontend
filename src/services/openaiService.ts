@@ -21,6 +21,10 @@ class OpenAIService {
   private baseURL = 'https://api.openai.com/v1';
   private apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
+  constructor() {
+    console.log('OpenAI Service initialized. API Key configured:', !!this.apiKey, 'Key length:', this.apiKey?.length);
+  }
+
   private async makeRequest(endpoint: string, data: any): Promise<any> {
     if (!this.apiKey) {
       console.warn('OpenAI API key not configured. Using fallback responses.');

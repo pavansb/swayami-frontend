@@ -80,7 +80,7 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <img 
-              src="/lovable-uploads/a0781cd2-bc4f-420b-b44d-bd18944dcca7.png" 
+              src="/lovable-uploads/9cf37de0-ba28-4f72-9b5c-2c838d6562f4.png" 
               alt="Swayami" 
               className="h-32 w-auto mx-auto mb-8"
             />
