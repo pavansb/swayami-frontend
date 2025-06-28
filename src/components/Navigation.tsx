@@ -17,7 +17,7 @@ const Navigation = () => {
           <img 
             src="/lovable-uploads/9cf37de0-ba28-4f72-9b5c-2c838d6562f4.png" 
             alt="Swayami" 
-            className="h-8 w-auto"
+            className="h-12 w-auto"
           />
         </div>
         
