@@ -1,33 +1,43 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface Goal {
   id: string;
-  type: string;
-  description: string;
+  title: string;
+  description?: string;
+  category?: string;
   status: 'active' | 'completed' | 'stalled';
+  priority?: string;
+  progress?: number;
+  created_at?: string;
 }
 
 interface Task {
   id: string;
   title: string;
-  linkedGoal?: string;
-  date: string;
-  isCompleted: boolean;
-  isRecommended?: boolean;
+  description?: string;
+  goal_id?: string;
+  status: 'pending' | 'completed' | 'in_progress';
+  priority?: string;
+  due_date?: string;
+  created_at?: string;
 }
 
 interface JournalEntry {
   id: string;
-  mood: string;
-  text: string;
-  extractedTasks: string[];
-  createdAt: string;
+  content: string;
+  mood_score?: number;
   summary?: string;
-  moodAnalysis?: string;
+  created_at?: string;
 }
 
 interface User {
-  email?: string;
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
   isLoggedIn: boolean;
   hasCompletedOnboarding: boolean;
   streak: number;
@@ -35,24 +45,27 @@ interface User {
 }
 
 interface AppContextType {
-  user: User;
+  user: User | null;
+  supabaseUser: SupabaseUser | null;
   goals: Goal[];
   tasks: Task[];
   journalEntries: JournalEntry[];
   habits: Array<{ id: string; emoji: string; label: string; completed: boolean }>;
+  isLoading: boolean;
   login: (email: string) => void;
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
-  completeOnboarding: (selectedGoals: { type: string; description: string }[]) => void;
-  addTask: (task: Omit<Task, 'id'>) => void;
-  toggleTask: (taskId: string) => void;
-  deleteTask: (taskId: string) => void;
-  editTask: (taskId: string, newTitle: string) => void;
-  addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'createdAt'>) => void;
-  updateJournalEntry: (entryId: string, updates: Partial<JournalEntry>) => void;
+  completeOnboarding: (selectedGoals: { type: string; description: string }[]) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'created_at'>) => Promise<void>;
+  toggleTask: (taskId: string) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
+  editTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'created_at'>) => Promise<void>;
+  updateJournalEntry: (entryId: string, updates: Partial<JournalEntry>) => Promise<void>;
   toggleHabit: (habitId: string) => void;
   regenerateRecommendations: () => void;
   resetAllData: () => void;
+  loadUserData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -66,31 +79,13 @@ export const useApp = () => {
 };
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User>(() => {
-    const saved = localStorage.getItem('swayami_user');
-    return saved ? JSON.parse(saved) : {
-      isLoggedIn: false,
-      hasCompletedOnboarding: false,
-      streak: 0,
-      level: 'Mindful Novice',
-    };
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const [goals, setGoals] = useState<Goal[]>(() => {
-    const saved = localStorage.getItem('swayami_goals');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('swayami_tasks');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
-    const saved = localStorage.getItem('swayami_journal');
-    return saved ? JSON.parse(saved) : [];
-  });
-
   const [habits, setHabits] = useState(() => {
     const saved = localStorage.getItem('swayami_habits');
     return saved ? JSON.parse(saved) : [
@@ -100,40 +95,128 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     ];
   });
 
-  // Save to localStorage whenever state changes
+  // Initialize auth state
   useEffect(() => {
-    localStorage.setItem('swayami_user', JSON.stringify(user));
-  }, [user]);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name || session.user.email || '',
+            avatar_url: session.user.user_metadata?.avatar_url,
+            isLoggedIn: true,
+            hasCompletedOnboarding: false,
+            streak: 0,
+            level: 'Mindful Novice',
+          });
+          await loadUserData();
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    localStorage.setItem('swayami_goals', JSON.stringify(goals));
-  }, [goals]);
+    initializeAuth();
 
-  useEffect(() => {
-    localStorage.setItem('swayami_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          setSupabaseUser(session.user);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name || session.user.email || '',
+            avatar_url: session.user.user_metadata?.avatar_url,
+            isLoggedIn: true,
+            hasCompletedOnboarding: false,
+            streak: 0,
+            level: 'Mindful Novice',
+          });
+          await loadUserData();
+        } else if (event === 'SIGNED_OUT') {
+          setSupabaseUser(null);
+          setUser(null);
+          setGoals([]);
+          setTasks([]);
+          setJournalEntries([]);
+        }
+        setIsLoading(false);
+      }
+    );
 
-  useEffect(() => {
-    localStorage.setItem('swayami_journal', JSON.stringify(journalEntries));
-  }, [journalEntries]);
+    return () => subscription.unsubscribe();
+  }, []);
 
+  // Save habits to localStorage
   useEffect(() => {
     localStorage.setItem('swayami_habits', JSON.stringify(habits));
   }, [habits]);
 
+  const loadUserData = async () => {
+    if (!supabaseUser) return;
+
+    try {
+      // Load goals
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .order('created_at', { ascending: false });
+
+      if (goalsError) {
+        console.error('Error loading goals:', goalsError);
+      } else {
+        setGoals(goalsData || []);
+      }
+
+      // Load tasks
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .order('created_at', { ascending: false });
+
+      if (tasksError) {
+        console.error('Error loading tasks:', tasksError);
+      } else {
+        setTasks(tasksData || []);
+      }
+
+      // Load journals
+      const { data: journalsData, error: journalsError } = await supabase
+        .from('journals')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .order('created_at', { ascending: false });
+
+      if (journalsError) {
+        console.error('Error loading journals:', journalsError);
+      } else {
+        setJournalEntries(journalsData || []);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
   const login = (email: string) => {
-    setUser({
-      email,
-      isLoggedIn: true,
-      hasCompletedOnboarding: false,
-      streak: 0,
-      level: 'Mindful Novice',
-    });
+    // This method is kept for compatibility but not used with Supabase auth
+    console.log('Login called with:', email);
   };
 
   const loginWithToken = (userData: { id: string; email: string; name?: string }) => {
     setUser({
+      id: userData.id,
       email: userData.email,
+      name: userData.name,
       isLoggedIn: true,
       hasCompletedOnboarding: false,
       streak: 0,
@@ -141,37 +224,58 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const logout = () => {
-    setUser({
-      isLoggedIn: false,
-      hasCompletedOnboarding: false,
-      streak: 0,
-      level: 'Mindful Novice',
-    });
-    localStorage.removeItem('swayami_user');
-    localStorage.removeItem('swayami_goals');
-    localStorage.removeItem('swayami_tasks');
-    localStorage.removeItem('swayami_journal');
-    localStorage.removeItem('swayami_habits');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSupabaseUser(null);
+      setGoals([]);
+      setTasks([]);
+      setJournalEntries([]);
+      localStorage.removeItem('swayami_habits');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
-  const completeOnboarding = (selectedGoals: { type: string; description: string }[]) => {
-    const newGoals = selectedGoals.map((goal, index) => ({
-      id: `goal-${index}`,
-      type: goal.type,
-      description: goal.description,
-      status: 'active' as const,
-    }));
-    
-    setGoals(newGoals);
-    setUser(prev => ({ ...prev, hasCompletedOnboarding: true }));
-    
-    // Generate AI-recommended tasks based on goals
-    const aiTasks = generateTasksFromGoals(newGoals);
-    setTasks(aiTasks);
+  const completeOnboarding = async (selectedGoals: { type: string; description: string }[]) => {
+    if (!supabaseUser) return;
+
+    try {
+      const goalsToInsert = selectedGoals.map(goal => ({
+        user_id: supabaseUser.id,
+        title: goal.type,
+        description: goal.description,
+        status: 'active' as const,
+        priority: 'medium',
+        progress: 0,
+      }));
+
+      const { data: insertedGoals, error } = await supabase
+        .from('goals')
+        .insert(goalsToInsert)
+        .select();
+
+      if (error) {
+        console.error('Error creating goals:', error);
+        return;
+      }
+
+      setGoals(insertedGoals || []);
+      setUser(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
+
+      // Generate AI-recommended tasks
+      if (insertedGoals) {
+        await generateTasksFromGoals(insertedGoals);
+      }
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    }
   };
 
-  const generateTasksFromGoals = (goals: Goal[]): Task[] => {
+  const generateTasksFromGoals = async (goals: Goal[]) => {
+    if (!supabaseUser) return;
+
     const taskSuggestions: Record<string, string[]> = {
       'Personal Wellbeing': ['Meditate for 10 minutes', 'Take a 20-minute walk', 'Practice gratitude journaling'],
       'Health / Fitness': ['Complete 30-minute workout', 'Drink 8 glasses of water', 'Prepare healthy meal'],
@@ -181,89 +285,179 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       'Mental Clarity': ['Practice deep breathing', 'Organize workspace', 'Plan tomorrow\'s priorities'],
     };
 
-    const tasks: Task[] = [];
-    const today = new Date().toISOString().split('T')[0];
+    const tasksToInsert: any[] = [];
 
-    goals.forEach((goal, goalIndex) => {
-      const suggestions = taskSuggestions[goal.type] || ['Work on your goal'];
-      suggestions.forEach((suggestion, taskIndex) => {
-        tasks.push({
-          id: `task-${goalIndex}-${taskIndex}`,
+    goals.forEach(goal => {
+      const suggestions = taskSuggestions[goal.title] || ['Work on your goal'];
+      suggestions.forEach(suggestion => {
+        tasksToInsert.push({
+          user_id: supabaseUser.id,
+          goal_id: goal.id,
           title: suggestion,
-          linkedGoal: goal.id,
-          date: today,
-          isCompleted: false,
-          isRecommended: true,
+          status: 'pending',
+          priority: 'medium',
         });
       });
     });
 
-    return tasks;
+    try {
+      const { data: insertedTasks, error } = await supabase
+        .from('tasks')
+        .insert(tasksToInsert)
+        .select();
+
+      if (error) {
+        console.error('Error creating tasks:', error);
+      } else {
+        setTasks(prev => [...prev, ...(insertedTasks || [])]);
+      }
+    } catch (error) {
+      console.error('Error generating tasks:', error);
+    }
   };
 
-  const regenerateRecommendations = () => {
-    const aiTasks = generateTasksFromGoals(goals);
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Remove old recommendations and add new ones
-    setTasks(prev => [
-      ...prev.filter(task => !task.isRecommended || task.date !== today),
-      ...aiTasks
-    ]);
+  const addTask = async (task: Omit<Task, 'id' | 'created_at'>) => {
+    if (!supabaseUser) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          ...task,
+          user_id: supabaseUser.id,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding task:', error);
+      } else {
+        setTasks(prev => [data, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
   };
 
-  const addTask = (task: Omit<Task, 'id'>) => {
-    const newTask = {
-      ...task,
-      id: `task-${Date.now()}`,
-    };
-    setTasks(prev => [...prev, newTask]);
+  const toggleTask = async (taskId: string) => {
+    if (!supabaseUser) return;
+
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId)
+        .eq('user_id', supabaseUser.id);
+
+      if (error) {
+        console.error('Error toggling task:', error);
+      } else {
+        setTasks(prev => 
+          prev.map(t => 
+            t.id === taskId ? { ...t, status: newStatus } : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
   };
 
-  const toggleTask = (taskId: string) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, isCompleted: !task.isCompleted }
-          : task
-      )
-    );
+  const deleteTask = async (taskId: string) => {
+    if (!supabaseUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId)
+        .eq('user_id', supabaseUser.id);
+
+      if (error) {
+        console.error('Error deleting task:', error);
+      } else {
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
+  const editTask = async (taskId: string, updates: Partial<Task>) => {
+    if (!supabaseUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+        .eq('user_id', supabaseUser.id);
+
+      if (error) {
+        console.error('Error updating task:', error);
+      } else {
+        setTasks(prev => 
+          prev.map(t => 
+            t.id === taskId ? { ...t, ...updates } : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
 
-  const editTask = (taskId: string, newTitle: string) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, title: newTitle }
-          : task
-      )
-    );
+  const addJournalEntry = async (entry: Omit<JournalEntry, 'id' | 'created_at'>) => {
+    if (!supabaseUser) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('journals')
+        .insert([{
+          ...entry,
+          user_id: supabaseUser.id,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding journal entry:', error);
+      } else {
+        setJournalEntries(prev => [data, ...prev]);
+        setUser(prev => prev ? { ...prev, streak: prev.streak + 1 } : null);
+      }
+    } catch (error) {
+      console.error('Error adding journal entry:', error);
+    }
   };
 
-  const addJournalEntry = (entry: Omit<JournalEntry, 'id' | 'createdAt'>) => {
-    const newEntry = {
-      ...entry,
-      id: `journal-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setJournalEntries(prev => [...prev, newEntry]);
-    
-    // Update streak
-    setUser(prev => ({ ...prev, streak: prev.streak + 1 }));
-  };
+  const updateJournalEntry = async (entryId: string, updates: Partial<JournalEntry>) => {
+    if (!supabaseUser) return;
 
-  const updateJournalEntry = (entryId: string, updates: Partial<JournalEntry>) => {
-    setJournalEntries(prev => 
-      prev.map(entry => 
-        entry.id === entryId 
-          ? { ...entry, ...updates }
-          : entry
-      )
-    );
+    try {
+      const { error } = await supabase
+        .from('journals')
+        .update(updates)
+        .eq('id', entryId)
+        .eq('user_id', supabaseUser.id);
+
+      if (error) {
+        console.error('Error updating journal entry:', error);
+      } else {
+        setJournalEntries(prev => 
+          prev.map(entry => 
+            entry.id === entryId ? { ...entry, ...updates } : entry
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating journal entry:', error);
+    }
   };
 
   const toggleHabit = (habitId: string) => {
@@ -276,39 +470,51 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const resetAllData = () => {
-    // Clear all localStorage data
-    localStorage.removeItem('swayami_user');
-    localStorage.removeItem('swayami_goals');
-    localStorage.removeItem('swayami_tasks');
-    localStorage.removeItem('swayami_journal');
-    localStorage.removeItem('swayami_habits');
-    
-    // Reset all state to initial values
-    setUser({
-      isLoggedIn: true,
-      hasCompletedOnboarding: false,
-      streak: 0,
-      level: 'Mindful Novice',
-    });
-    setGoals([]);
-    setTasks([]);
-    setJournalEntries([]);
-    setHabits([
-      { id: '1', emoji: '💧', label: 'Drink Water', completed: false },
-      { id: '2', emoji: '🏃', label: 'Exercise', completed: false },
-      { id: '3', emoji: '📚', label: 'Read', completed: false },
-    ]);
+  const regenerateRecommendations = async () => {
+    await generateTasksFromGoals(goals);
+  };
+
+  const resetAllData = async () => {
+    if (!supabaseUser) return;
+
+    try {
+      // Delete all user data from Supabase
+      await Promise.all([
+        supabase.from('goals').delete().eq('user_id', supabaseUser.id),
+        supabase.from('tasks').delete().eq('user_id', supabaseUser.id),
+        supabase.from('journals').delete().eq('user_id', supabaseUser.id),
+      ]);
+
+      // Reset local state
+      setGoals([]);
+      setTasks([]);
+      setJournalEntries([]);
+      setHabits([
+        { id: '1', emoji: '💧', label: 'Drink Water', completed: false },
+        { id: '2', emoji: '🏃', label: 'Exercise', completed: false },
+        { id: '3', emoji: '📚', label: 'Read', completed: false },
+      ]);
+      setUser(prev => prev ? {
+        ...prev,
+        hasCompletedOnboarding: false,
+        streak: 0,
+        level: 'Mindful Novice',
+      } : null);
+    } catch (error) {
+      console.error('Error resetting data:', error);
+    }
   };
 
   return (
     <AppContext.Provider
       value={{
         user,
+        supabaseUser,
         goals,
         tasks,
         journalEntries,
         habits,
+        isLoading,
         login,
         loginWithToken,
         logout,
@@ -322,6 +528,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         toggleHabit,
         regenerateRecommendations,
         resetAllData,
+        loadUserData,
       }}
     >
       {children}

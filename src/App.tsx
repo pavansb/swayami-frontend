@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { AppProvider } from "./contexts/AppContext";
 import { ThemeProvider } from "./components/ThemeProvider";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +22,31 @@ const AppRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/mindspace" element={<Mindspace />} />
-      <Route path="/progress" element={<Progress />} />
-      <Route path="/settings" element={<Settings />} />
+      <Route path="/onboarding" element={
+        <ProtectedRoute>
+          <Onboarding />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/mindspace" element={
+        <ProtectedRoute>
+          <Mindspace />
+        </ProtectedRoute>
+      } />
+      <Route path="/progress" element={
+        <ProtectedRoute>
+          <Progress />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
