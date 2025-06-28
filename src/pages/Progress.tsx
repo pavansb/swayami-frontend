@@ -9,7 +9,7 @@ const Progress = () => {
   const { tasks, goals, journalEntries, user } = useApp();
   const navigate = useNavigate();
 
-  const completedTasks = tasks.filter(task => task.isCompleted).length;
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -17,7 +17,7 @@ const Progress = () => {
   const completedGoals = goals.filter(goal => goal.status === 'completed').length;
   const goalCompletionRate = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
 
-  const reflectionStreak = user.streak;
+  const reflectionStreak = user?.streak || 0;
 
   // Calculate user level
   const getLevelInfo = (streak: number) => {
@@ -155,8 +155,8 @@ const Progress = () => {
             
             <div className="space-y-4">
               {goals.map((goal) => {
-                const goalTasks = tasks.filter(task => task.linkedGoal === goal.id);
-                const completedGoalTasks = goalTasks.filter(task => task.isCompleted);
+                const goalTasks = tasks.filter(task => task.goal_id === goal.id);
+                const completedGoalTasks = goalTasks.filter(task => task.status === 'completed');
                 const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
                 
                 const getStatusColor = (status: string, progress: number) => {
@@ -169,7 +169,7 @@ const Progress = () => {
                   <div key={goal.id} className="border-b border-swayami-border pb-4 last:border-b-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-medium text-swayami-black">
-                        {goal.type}
+                        {goal.title}
                       </div>
                       <div className={`text-sm px-2 py-1 rounded ${getStatusColor(goal.status, progress)}`}>
                         {progress === 100 ? 'Complete' : progress > 50 ? 'In Progress' : 'Stalled'}

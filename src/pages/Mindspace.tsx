@@ -31,13 +31,11 @@ const Mindspace = () => {
   }>({});
 
   const handleSubmit = () => {
-    if (journalText.trim() && selectedMood) {
+    if (journalText.trim()) {
       const entry = {
-        mood: selectedMood,
-        text: journalText,
-        extractedTasks: analysis.extractedTasks || [],
+        content: journalText,
+        mood_score: selectedMood ? moods.findIndex(m => m.label === selectedMood) + 1 : undefined,
         summary: analysis.summary,
-        moodAnalysis: analysis.moodAnalysis,
       };
       
       addJournalEntry(entry);
@@ -155,7 +153,7 @@ const Mindspace = () => {
 
               <Button 
                 onClick={handleSubmit}
-                disabled={!journalText.trim() || !selectedMood}
+                disabled={!journalText.trim()}
                 className="w-full mb-4 bg-swayami-primary hover:bg-swayami-primary-hover rounded-xl"
               >
                 <Save className="w-4 h-4 mr-2" />
@@ -243,17 +241,21 @@ const Mindspace = () => {
                   <div key={entry.id} className="border-b border-swayami-border pb-3 last:border-b-0">
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-sm text-swayami-light-text">
-                        {new Date(entry.createdAt).toLocaleDateString()}
+                        {new Date(entry.created_at || '').toLocaleDateString()}
                       </span>
-                      <span className="text-sm">
-                        {moods.find(m => m.label === entry.mood)?.emoji}
-                      </span>
-                      <span className="text-xs text-swayami-light-text">
-                        {entry.mood}
-                      </span>
+                      {entry.mood_score && (
+                        <>
+                          <span className="text-sm">
+                            {moods[entry.mood_score - 1]?.emoji}
+                          </span>
+                          <span className="text-xs text-swayami-light-text">
+                            {moods[entry.mood_score - 1]?.label}
+                          </span>
+                        </>
+                      )}
                     </div>
                     <p className="text-sm text-swayami-light-text line-clamp-2">
-                      {entry.text.length > 100 ? entry.text.substring(0, 100) + '...' : entry.text}
+                      {entry.content.length > 100 ? entry.content.substring(0, 100) + '...' : entry.content}
                     </p>
                   </div>
                 ))}

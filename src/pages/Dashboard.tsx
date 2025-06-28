@@ -19,16 +19,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const today = new Date().toISOString().split('T')[0];
-  const todaysTasks = tasks.filter(task => task.date === today);
+  const todaysTasks = tasks; // All tasks for now since we don't have date filtering
   
   // Group tasks by goal
   const tasksByGoal = goals.reduce((acc, goal) => {
-    acc[goal.type] = todaysTasks.filter(task => task.linkedGoal === goal.id);
+    acc[goal.title] = todaysTasks.filter(task => task.goal_id === goal.id);
     return acc;
   }, {} as Record<string, typeof todaysTasks>);
 
   // Add ungrouped tasks
-  const ungroupedTasks = todaysTasks.filter(task => !task.linkedGoal);
+  const ungroupedTasks = todaysTasks.filter(task => !task.goal_id);
   if (ungroupedTasks.length > 0) {
     tasksByGoal['General'] = ungroupedTasks;
   }
@@ -36,12 +36,11 @@ const Dashboard = () => {
   const handleAddTask = (goalType: string) => {
     const title = newTaskTitles[goalType];
     if (title?.trim()) {
-      const linkedGoal = goals.find(g => g.type === goalType)?.id;
+      const linkedGoal = goals.find(g => g.title === goalType)?.id;
       addTask({
         title,
-        date: today,
-        isCompleted: false,
-        linkedGoal,
+        status: 'pending',
+        goal_id: linkedGoal,
       });
       setNewTaskTitles(prev => ({ ...prev, [goalType]: '' }));
     }
@@ -54,13 +53,13 @@ const Dashboard = () => {
 
   const saveEditTask = () => {
     if (editingTask && editTitle.trim()) {
-      editTask(editingTask, editTitle);
+      editTask(editingTask, { title: editTitle });
       setEditingTask(null);
       setEditTitle('');
     }
   };
 
-  const completedTasks = todaysTasks.filter(task => task.isCompleted).length;
+  const completedTasks = todaysTasks.filter(task => task.status === 'completed').length;
   const totalTasks = todaysTasks.length;
   const completedHabits = habits.filter(habit => habit.completed).length;
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -111,14 +110,14 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {goals.map((goal) => {
-                    const goalTasks = tasks.filter(task => task.linkedGoal === goal.id);
-                    const completedGoalTasks = goalTasks.filter(task => task.isCompleted);
+                    const goalTasks = tasks.filter(task => task.goal_id === goal.id);
+                    const completedGoalTasks = goalTasks.filter(task => task.status === 'completed');
                     const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
                     
                     return (
                       <div key={goal.id} className="border border-swayami-border dark:border-gray-700 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-swayami-black dark:text-white">{goal.type}</h4>
+                          <h4 className="font-medium text-swayami-black dark:text-white">{goal.title}</h4>
                           <div className="flex space-x-2">
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
@@ -204,7 +203,7 @@ const Dashboard = () => {
                         className="flex items-center space-x-3 p-4 rounded-lg border border-swayami-border dark:border-gray-700 hover:shadow-md transition-shadow bg-white dark:bg-gray-700"
                       >
                         <Checkbox
-                          checked={task.isCompleted}
+                          checked={task.status === 'completed'}
                           onCheckedChange={() => toggleTask(task.id)}
                         />
                         
@@ -222,17 +221,12 @@ const Dashboard = () => {
                           <>
                             <span 
                               className={`flex-1 ${
-                                task.isCompleted 
+                                task.status === 'completed'
                                   ? 'line-through text-swayami-light-text dark:text-gray-400' 
                                   : 'text-swayami-black dark:text-white'
                               }`}
                             >
                               {task.title}
-                              {task.isRecommended && (
-                                <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-swayami-primary dark:text-purple-300 px-2 py-1 rounded-full">
-                                  Recommended
-                                </span>
-                              )}
                             </span>
                             <Button
                               variant="ghost"
@@ -317,11 +311,11 @@ const Dashboard = () => {
                     <div className="text-sm text-swayami-light-text dark:text-gray-400">Tasks Completed</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-2xl font-bold text-swayami-primary">{user.streak} 🔥</div>
+                    <div className="text-2xl font-bold text-swayami-primary">{user?.streak || 0} 🔥</div>
                     <div className="text-sm text-swayami-light-text dark:text-gray-400">Day Streak</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-lg font-bold text-swayami-primary">{user.level}</div>
+                    <div className="text-lg font-bold text-swayami-primary">{user?.level || 'Mindful Novice'}</div>
                     <div className="text-sm text-swayami-light-text dark:text-gray-400">Current Rank</div>
                   </div>
                 </div>
@@ -374,11 +368,13 @@ const Dashboard = () => {
               {lastJournalEntry ? (
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-sm text-swayami-light-text dark:text-gray-400">Last mood:</span>
-                    <span className="font-medium dark:text-white">{lastJournalEntry.mood}</span>
+                    <span className="text-sm text-swayami-light-text dark:text-gray-400">Last entry:</span>
+                    <span className="font-medium dark:text-white">
+                      {new Date(lastJournalEntry.created_at || '').toLocaleDateString()}
+                    </span>
                   </div>
                   <p className="text-sm text-swayami-light-text dark:text-gray-400 line-clamp-2">
-                    {lastJournalEntry.text.slice(0, 100)}...
+                    {lastJournalEntry.content.slice(0, 100)}...
                   </p>
                 </div>
               ) : (

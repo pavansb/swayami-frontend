@@ -12,6 +12,7 @@ interface Goal {
   priority?: string;
   progress?: number;
   created_at?: string;
+  user_id?: string;
 }
 
 interface Task {
@@ -23,6 +24,7 @@ interface Task {
   priority?: string;
   due_date?: string;
   created_at?: string;
+  user_id?: string;
 }
 
 interface JournalEntry {
@@ -31,6 +33,7 @@ interface JournalEntry {
   mood_score?: number;
   summary?: string;
   created_at?: string;
+  user_id?: string;
 }
 
 interface User {
@@ -174,7 +177,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (goalsError) {
         console.error('Error loading goals:', goalsError);
       } else {
-        setGoals(goalsData || []);
+        setGoals((goalsData || []).map(goal => ({
+          ...goal,
+          status: goal.status as 'active' | 'completed' | 'stalled'
+        })));
       }
 
       // Load tasks
@@ -187,7 +193,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (tasksError) {
         console.error('Error loading tasks:', tasksError);
       } else {
-        setTasks(tasksData || []);
+        setTasks((tasksData || []).map(task => ({
+          ...task,
+          status: task.status as 'pending' | 'completed' | 'in_progress'
+        })));
       }
 
       // Load journals
@@ -261,12 +270,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      setGoals(insertedGoals || []);
+      setGoals((insertedGoals || []).map(goal => ({
+        ...goal,
+        status: goal.status as 'active' | 'completed' | 'stalled'
+      })));
       setUser(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
 
       // Generate AI-recommended tasks
       if (insertedGoals) {
-        await generateTasksFromGoals(insertedGoals);
+        await generateTasksFromGoals(insertedGoals.map(goal => ({
+          ...goal,
+          status: goal.status as 'active' | 'completed' | 'stalled'
+        })));
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -309,7 +324,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error creating tasks:', error);
       } else {
-        setTasks(prev => [...prev, ...(insertedTasks || [])]);
+        setTasks(prev => [...prev, ...(insertedTasks || []).map(task => ({
+          ...task,
+          status: task.status as 'pending' | 'completed' | 'in_progress'
+        }))]);
       }
     } catch (error) {
       console.error('Error generating tasks:', error);
@@ -332,7 +350,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error adding task:', error);
       } else {
-        setTasks(prev => [data, ...prev]);
+        setTasks(prev => [{
+          ...data,
+          status: data.status as 'pending' | 'completed' | 'in_progress'
+        }, ...prev]);
       }
     } catch (error) {
       console.error('Error adding task:', error);
