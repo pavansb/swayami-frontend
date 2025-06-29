@@ -61,8 +61,7 @@ interface AppContextType {
   login: (email: string) => void;
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
-  signInWithGoogle: () => Promise<{ success: boolean; error: any }>;
-  completeOnboarding: (selectedGoals: { type: string; description: string }[]) => Promise<Goal[]>;
+  completeOnboarding: (selectedGoals: { type: string; description: string }[]) => Promise<void>;
   addTask: (task: Omit<Task, '_id' | 'created_at'>) => Promise<void>;
   toggleTask: (taskId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
@@ -77,7 +76,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const useApp = () => {
+export const useApp = () => {
   const context = useContext(AppContext);
   if (context === undefined) {
     throw new Error('useApp must be used within an AppProvider');
@@ -106,11 +105,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         console.log('🔄 MongoDB App: Initializing authentication...');
         
         // Get current Supabase session (for auth only)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.warn('⚠️ MongoDB App: Session error (non-critical):', sessionError);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
           console.log('✅ MongoDB App: Found existing Supabase session');
@@ -123,38 +118,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         // Listen for auth changes (Supabase auth only)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('🔔 COMPREHENSIVE AUTH STATE DEBUG - Event:', event);
-            console.log('🔔 COMPREHENSIVE AUTH STATE DEBUG - Session details:', {
-              hasSession: !!session,
-              hasUser: !!session?.user,
-              userEmail: session?.user?.email,
-              userId: session?.user?.id
-            });
+            console.log('🔔 MongoDB App: Auth state changed:', event);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log('✅ COMPREHENSIVE AUTH STATE DEBUG - User signed in via auth state change');
-              console.log('✅ User details:', {
-                email: session.user.email,
-                id: session.user.id,
-                metadata: session.user.user_metadata
-              });
+              console.log('✅ MongoDB App: User signed in');
               setSupabaseUser(session.user);
               await initializeUserFromSupabase(session.user);
             } else if (event === 'SIGNED_OUT') {
-              console.log('👋 COMPREHENSIVE AUTH STATE DEBUG - User signed out');
+              console.log('👋 MongoDB App: User signed out');
               setSupabaseUser(null);
               setUser(null);
               setGoals([]);
               setTasks([]);
               setJournalEntries([]);
-            } else if (event === 'TOKEN_REFRESHED') {
-              console.log('🔄 COMPREHENSIVE AUTH STATE DEBUG - Token refreshed');
-              if (session?.user) {
-                setSupabaseUser(session.user);
-                // Don't reinitialize user data on token refresh
-              }
-            } else {
-              console.log('🔔 COMPREHENSIVE AUTH STATE DEBUG - Other event:', event);
             }
           }
         );
@@ -164,7 +140,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         };
       } catch (error) {
         console.error('❌ MongoDB App: Error initializing auth:', error);
-        // Don't block the app if auth initialization fails
       } finally {
         setIsLoading(false);
       }
@@ -211,9 +186,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         await loadUserDataFromMongo(mongoUser._id);
       }
     } catch (error) {
-      console.error('❌ MongoDB App: Error initializing user from Supabase:', error);
-      // Don't block the app, but show error info
-      console.error('💡 This might be due to MongoDB connection issues or service unavailability');
+      console.error('❌ MongoDB App: Error initializing user:', error);
     }
   };
 
@@ -281,98 +254,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      // COMPREHENSIVE PORT & REDIRECT DEBUG
-      const currentOrigin = window.location.origin;
-      const currentPort = window.location.port;
-      const currentHostname = window.location.hostname;
-      const expectedRedirectUrl = `${currentOrigin}/auth/callback`;
-      
-      console.log('🔄 COMPREHENSIVE SIGN-IN DEBUG - Step 1: Initiating Google OAuth...');
-      console.log('🔍 CRITICAL - Port & URL Analysis:');
-      console.log('🔍 Current origin:', currentOrigin);
-      console.log('🔍 Current port:', currentPort);
-      console.log('🔍 Current hostname:', currentHostname);
-      console.log('🔍 Expected redirect URL:', expectedRedirectUrl);
-      console.log('🔍 Full current URL:', window.location.href);
-      
-      // Check for common port mismatch issues
-      if (currentPort !== '3000' && currentPort !== '') {
-        console.warn('⚠️ CRITICAL PORT ISSUE DETECTED!');
-        console.warn('⚠️ Server is running on port', currentPort, 'but OAuth might be configured for port 3000');
-        console.warn('⚠️ This WILL cause OAuth redirect failures!');
-        console.warn('⚠️ Solution: Update OAuth redirect URLs or restart server on port 3000');
-      }
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: expectedRedirectUrl, // Use dynamic redirect URL
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      console.log('🔍 COMPREHENSIVE SIGN-IN DEBUG - Step 2: OAuth Response');
-      console.log('🔍 OAuth Data:', data);
-      console.log('🔍 OAuth Error:', error);
-
-      if (error) {
-        console.error('❌ COMPREHENSIVE SIGN-IN DEBUG - OAuth Error Details:');
-        console.error('❌ Error message:', error.message);
-        console.error('❌ Error details:', error);
-        
-        // Check for specific error types
-        if (error.message.includes('redirect_uri_mismatch')) {
-          console.error('🔧 REDIRECT URI MISMATCH DETECTED!');
-          console.error('💡 The OAuth redirect URL in Google/Supabase doesn\'t match current server URL');
-          console.error('💡 Current redirect URL:', expectedRedirectUrl);
-          console.error('🛠️ Fix: Update OAuth redirect URLs in Google Console and Supabase Dashboard');
-        }
-        
-        if (error.message.includes('Database error saving new user')) {
-          console.error('🚨 CRITICAL DATABASE TRIGGER ERROR DETECTED IN OAUTH INITIATION!');
-          console.error('💡 This means the trigger is blocking OAuth at the very start');
-          console.error('💡 The user will see the database error in the callback URL');
-          console.error('🛠️ URGENT: Remove database trigger in Supabase SQL Editor');
-          console.error('🛠️ SQL: DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;');
-          // Still return success as the redirect will happen and show proper error handling
-          return { success: true, error: null };
-        }
-        
-        return { success: false, error };
-      }
-
-      console.log('✅ COMPREHENSIVE SIGN-IN DEBUG - OAuth initiated successfully');
-      console.log('✅ User should be redirected to Google OAuth now');
-      console.log('✅ Expected callback URL:', expectedRedirectUrl);
-      return { success: true, error: null };
-      
-    } catch (error) {
-      console.error('❌ COMPREHENSIVE SIGN-IN DEBUG - Unexpected error during Google sign-in:', error);
-      return { success: false, error };
-    }
-  };
-
   const completeOnboarding = async (selectedGoals: { type: string; description: string }[]) => {
     if (!user?._id) {
       throw new Error('User not authenticated');
     }
 
     try {
-      console.log('🎯 ONBOARDING DEBUG: Starting onboarding completion');
-      console.log('🎯 User ID:', user._id);
-      console.log('🎯 Selected goals:', selectedGoals);
-      console.log('🎯 Current goals state before:', goals);
+      console.log('🎯 MongoDB App: Completing onboarding with goals:', selectedGoals);
 
       // Create goals in MongoDB
       const createdGoals: Goal[] = [];
       for (const goalData of selectedGoals) {
-        console.log('🎯 ONBOARDING DEBUG: Creating goal:', goalData);
-        
         const goal = await mongoService.createGoal({
           user_id: user._id,
           title: goalData.type,
@@ -381,39 +273,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           priority: 'medium'
         });
         
-        console.log('🎯 ONBOARDING DEBUG: Goal created:', goal);
-        
         createdGoals.push({
           ...goal,
           status: goal.status as 'active' | 'completed' | 'stalled'
         });
       }
 
-      console.log('🎯 ONBOARDING DEBUG: All goals created:', createdGoals);
-      console.log('🎯 ONBOARDING DEBUG: Total goals created:', createdGoals.length);
-
       // Update user onboarding status
-      console.log('🎯 ONBOARDING DEBUG: Updating user onboarding status...');
       await mongoService.updateUserOnboarding(user._id, true);
 
       // Update local state
-      console.log('🎯 ONBOARDING DEBUG: Updating local state...');
-      console.log('🎯 ONBOARDING DEBUG: Goals being set:', createdGoals);
       setGoals(createdGoals);
       setUser(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
 
-      console.log('🎯 ONBOARDING DEBUG: State updates completed');
-      
-      // Verify goals were actually loaded by fetching them again
-      console.log('🎯 ONBOARDING DEBUG: Verifying goals in database...');
-      const fetchedGoals = await mongoService.getUserGoals(user._id);
-      console.log('🎯 ONBOARDING DEBUG: Fetched goals from DB:', fetchedGoals);
-
       console.log('✅ MongoDB App: Onboarding completed successfully');
-      console.log('✅ Final goals state should be:', createdGoals);
-      
-      // Return the created goals for immediate use
-      return createdGoals;
     } catch (error) {
       console.error('❌ MongoDB App: Error completing onboarding:', error);
       throw error;
@@ -540,7 +413,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     login,
     loginWithToken,
     logout,
-    signInWithGoogle,
     completeOnboarding,
     addTask,
     toggleTask,
@@ -556,5 +428,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-export { useApp };

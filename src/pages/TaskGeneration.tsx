@@ -25,6 +25,7 @@ const TaskGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Get goals from location state (passed from onboarding) or from context
   const goalsToProcess = location.state?.goals || goals;
@@ -49,7 +50,7 @@ const TaskGeneration = () => {
         );
 
         newGoalsWithTasks.push({
-          goalId: goal.id || goal.type,
+          goalId: goal._id || goal.type,
           goalTitle: goal.title || goal.type,
           goalDescription: goal.description || '',
           tasks: response.tasks,
@@ -61,7 +62,7 @@ const TaskGeneration = () => {
         console.error('Error generating tasks for goal:', goal.title, error);
         // Add fallback task
         newGoalsWithTasks.push({
-          goalId: goal.id || goal.type,
+          goalId: goal._id || goal.type,
           goalTitle: goal.title || goal.type,
           goalDescription: goal.description || '',
           tasks: [{
@@ -139,56 +140,64 @@ const TaskGeneration = () => {
   };
 
   const handleCompleteSetup = async () => {
-    setIsCompleting(true);
-    
     try {
-      let savedGoals = goals;
+      console.log('🚀 TASK GENERATION DEBUG: Starting complete setup process');
+      console.log('🚀 Goals from context before onboarding:', goals);
+      console.log('🚀 Goals with tasks to process:', goalsWithTasks);
+      setIsCompleting(true);
       
-      console.log('TaskGeneration: Starting setup completion', {
-        hasLocationGoals: !!location.state?.goals,
-        currentGoalsLength: goals.length
-      });
+      // Complete onboarding first and get the created goals directly
+      console.log('📝 TASK GENERATION DEBUG: Completing onboarding with selected goals');
+      const createdGoals = await completeOnboarding(
+        goalsWithTasks.map(g => ({ type: g.goalTitle, description: g.goalDescription }))
+      );
       
-      // First, complete onboarding if we have goals from onboarding
-      if (location.state?.goals) {
-        console.log('TaskGeneration: Completing onboarding with goals:', location.state.goals);
-        await completeOnboarding(location.state.goals);
-        
-        // Wait for goals to be properly saved
-        let attempts = 0;
-        while (attempts < 15 && savedGoals.length === 0) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          await loadUserData(); // Refresh the data from Supabase
-          if (goals.length > 0) {
-            savedGoals = goals;
-            console.log('TaskGeneration: Goals loaded successfully after', attempts + 1, 'attempts');
-            break;
-          }
-          attempts++;
-        }
-        
-        if (savedGoals.length === 0) {
-          console.warn('TaskGeneration: Goals still not loaded after all attempts');
-        }
+      console.log('✅ TASK GENERATION DEBUG: Onboarding completed, received goals:', createdGoals);
+      console.log('✅ TASK GENERATION DEBUG: Total goals received:', createdGoals.length);
+      console.log('✅ TASK GENERATION DEBUG: Goal details:', createdGoals.map(g => ({ id: g._id, title: g.title })));
+
+      if (createdGoals.length === 0) {
+        console.error('❌ TASK GENERATION DEBUG: No goals were created during onboarding');
+        throw new Error('Goals were not created properly during onboarding. Please try again.');
       }
 
-      // Add selected tasks to Supabase
+      // Use the created goals directly instead of waiting for context state
+      console.log('🎯 TASK GENERATION DEBUG: Starting task creation with created goals');
+      
       for (const goalWithTasks of goalsWithTasks) {
-        // Find the corresponding goal ID from the context
-        const matchingGoal = savedGoals.find(g => 
+        // Find the corresponding goal ID from the created goals
+        const matchingGoal = createdGoals.find(g => 
           g.title === goalWithTasks.goalTitle || 
-          g.id === goalWithTasks.goalId
+          g.title === goalWithTasks.goalId
         );
         
-        const goalId = matchingGoal?.id || goalWithTasks.goalId;
+        console.log('🔍 TASK GENERATION DEBUG: Goal matching result:', {
+          searchingFor: goalWithTasks.goalTitle,
+          foundGoal: matchingGoal,
+          availableGoals: createdGoals.map(g => ({ id: g._id, title: g.title }))
+        });
+        
+        if (!matchingGoal) {
+          console.error('❌ TASK GENERATION DEBUG: No matching goal found for:', goalWithTasks.goalTitle);
+          console.error('❌ TASK GENERATION DEBUG: Available goals:', createdGoals);
+          continue; // Skip this goal if we can't find a match
+        }
+        
+        const goalId = matchingGoal._id;
         
         const selectedTasksData = goalWithTasks.tasks.filter((_, index) => 
           goalWithTasks.selectedTasks[index]
         );
 
-        console.log('TaskGeneration: Adding tasks for goal:', goalWithTasks.goalTitle, 'Tasks:', selectedTasksData.length);
+        console.log('✅ TASK GENERATION DEBUG: Adding', selectedTasksData.length, 'tasks for goal:', goalWithTasks.goalTitle, 'with ID:', goalId);
 
         for (const task of selectedTasksData) {
+          console.log('📝 TASK GENERATION DEBUG: Creating task:', {
+            title: task.title,
+            goal_id: goalId,
+            goal_title: goalWithTasks.goalTitle
+          });
+          
           await addTask({
             title: task.title,
             description: task.description,
@@ -199,35 +208,18 @@ const TaskGeneration = () => {
         }
       }
 
-      toast({
-        title: "Setup Complete! 🎉",
-        description: "Your personalized tasks have been added to your dashboard.",
-      });
-
-      console.log('TaskGeneration: About to navigate to dashboard');
-      
-      // Wait a bit for React state updates to process before navigating
-      await new Promise(resolve => setTimeout(resolve, 200));
+      console.log('🎉 TASK GENERATION DEBUG: All tasks created successfully');
+      console.log('🎯 TASK GENERATION DEBUG: About to navigate to dashboard');
       
       // Navigate to dashboard
-      console.log('TaskGeneration: Calling navigate to dashboard');
-      navigate('/dashboard');
-      
-      // Backup: If navigation doesn't work after 2 seconds, force reload to dashboard
       setTimeout(() => {
-        if (window.location.pathname !== '/dashboard') {
-          console.log('TaskGeneration: Navigation failed, forcing page reload to dashboard');
-          window.location.href = '/dashboard';
-        }
-      }, 2000);
+        console.log('🎯 TASK GENERATION DEBUG: Calling navigate to dashboard');
+        navigate('/dashboard');
+      }, 100);
       
     } catch (error) {
-      console.error('Error saving tasks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save tasks. Please try again.",
-        variant: "destructive",
-      });
+      console.error('❌ TASK GENERATION DEBUG: Error in handleCompleteSetup:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setIsCompleting(false);
     }
@@ -263,126 +255,146 @@ const TaskGeneration = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <Sparkles className="w-8 h-8 text-[#9650D4] mr-3" />
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">
-              Your AI-Generated Action Plan
-            </h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 lg:p-8 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            🎯 Your Personalized Action Plan
+          </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We've analyzed your goals and created specific, actionable tasks. Select the ones that resonate with you!
+            AI has analyzed your goals and generated smart, actionable tasks. Review, customize, and get started!
           </p>
         </div>
 
-        {/* Goals and Tasks */}
-        <div className="space-y-8 mb-12">
-          {goalsWithTasks.map((goalWithTasks) => (
-            <div key={goalWithTasks.goalId} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              {/* Goal Header */}
-              <div className="bg-gradient-to-r from-[#9650D4] to-[#8547C4] text-white p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold mb-2">{goalWithTasks.goalTitle}</h3>
-                    <p className="text-purple-100 text-sm">{goalWithTasks.goalDescription}</p>
-                  </div>
-                  <Button
-                    onClick={() => regenerateTasksForGoal(goalWithTasks.goalId)}
-                    disabled={isRegenerating === goalWithTasks.goalId}
-                    variant="secondary"
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                  >
-                    {isRegenerating === goalWithTasks.goalId ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                    <span className="ml-2">Regenerate</span>
-                  </Button>
-                </div>
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
               </div>
-
-              {/* AI Analysis */}
-              <div className="p-6 bg-purple-50 border-b border-purple-100">
-                <h4 className="font-semibold text-gray-900 mb-2">🧠 AI Analysis</h4>
-                <p className="text-gray-700 text-sm">{goalWithTasks.analysis}</p>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Setup Error</h3>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
               </div>
+            </div>
+          </div>
+        )}
 
-              {/* Tasks */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {goalWithTasks.tasks.map((task, taskIndex) => (
-                    <div 
-                      key={taskIndex}
-                      className={`border-2 rounded-xl p-4 transition-all duration-200 ${
-                        goalWithTasks.selectedTasks[taskIndex]
-                          ? 'border-[#9650D4] bg-purple-50 shadow-md'
-                          : 'border-gray-200 bg-white hover:border-purple-200'
-                      }`}
+        {isGenerating ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">Generating your personalized tasks...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment as we analyze your goals</p>
+          </div>
+        ) : (
+          <div className="space-y-8 mb-12">
+            {goalsWithTasks.map((goalWithTasks) => (
+              <div key={goalWithTasks.goalId} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                {/* Goal Header */}
+                <div className="bg-gradient-to-r from-[#9650D4] to-[#8547C4] text-white p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">{goalWithTasks.goalTitle}</h3>
+                      <p className="text-purple-100 text-sm">{goalWithTasks.goalDescription}</p>
+                    </div>
+                    <Button
+                      onClick={() => regenerateTasksForGoal(goalWithTasks.goalId)}
+                      disabled={isRegenerating === goalWithTasks.goalId}
+                      variant="secondary"
+                      size="sm"
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
                     >
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          checked={goalWithTasks.selectedTasks[taskIndex]}
-                          onCheckedChange={() => toggleTaskSelection(goalWithTasks.goalId, taskIndex)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <h5 className="font-semibold text-gray-900 mb-2">{task.title}</h5>
-                          <p className="text-gray-600 text-sm mb-3">{task.description}</p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                                {task.priority}
-                              </span>
-                              {task.estimatedDuration && (
-                                <div className="flex items-center text-gray-500 text-xs">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  {task.estimatedDuration}m
-                                </div>
-                              )}
+                      {isRegenerating === goalWithTasks.goalId ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
+                      <span className="ml-2">Regenerate</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* AI Analysis */}
+                <div className="p-6 bg-purple-50 border-b border-purple-100">
+                  <h4 className="font-semibold text-gray-900 mb-2">🧠 AI Analysis</h4>
+                  <p className="text-gray-700 text-sm">{goalWithTasks.analysis}</p>
+                </div>
+
+                {/* Tasks */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {goalWithTasks.tasks.map((task, taskIndex) => (
+                      <div 
+                        key={taskIndex}
+                        className={`border-2 rounded-xl p-4 transition-all duration-200 ${
+                          goalWithTasks.selectedTasks[taskIndex]
+                            ? 'border-[#9650D4] bg-purple-50 shadow-md'
+                            : 'border-gray-200 bg-white hover:border-purple-200'
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <Checkbox
+                            checked={goalWithTasks.selectedTasks[taskIndex]}
+                            onCheckedChange={() => toggleTaskSelection(goalWithTasks.goalId, taskIndex)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <h5 className="font-semibold text-gray-900 mb-2">{task.title}</h5>
+                            <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                                  {task.priority}
+                                </span>
+                                {task.estimatedDuration && (
+                                  <div className="flex items-center text-gray-500 text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {task.estimatedDuration}m
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rating */}
-              <div className="p-6 bg-gray-50 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Rate these suggestions</h4>
-                    <p className="text-gray-600 text-sm">Help us improve future recommendations</p>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => setRating(goalWithTasks.goalId, star)}
-                        className="p-1"
-                      >
-                        <Star 
-                          className={`w-5 h-5 transition-colors ${
-                            star <= goalWithTasks.rating 
-                              ? 'text-yellow-400 fill-yellow-400' 
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Rating */}
+                <div className="p-6 bg-gray-50 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Rate these suggestions</h4>
+                      <p className="text-gray-600 text-sm">Help us improve future recommendations</p>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setRating(goalWithTasks.goalId, star)}
+                          className="p-1"
+                        >
+                          <Star 
+                            className={`w-5 h-5 transition-colors ${
+                              star <= goalWithTasks.rating 
+                                ? 'text-yellow-400 fill-yellow-400' 
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="text-center">

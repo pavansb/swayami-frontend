@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, loginWithToken } = useApp();
+  const { user, loginWithToken, signInWithGoogle } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const Login = () => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('Login: Auth state changed:', event, session);
         
         if (event === 'SIGNED_IN' && session?.user) {
           // Login the user in our app context
@@ -35,6 +35,8 @@ const Login = () => {
           });
           
           navigate('/dashboard');
+        } else if (event === 'SIGNED_OUT') {
+          console.log('Login: User signed out');
         }
       }
     );
@@ -46,23 +48,47 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/login`
-        }
+      console.log('🔄 COMPREHENSIVE LOGIN DEBUG - Step 1: Initiating Google sign-in...');
+      console.log('🔍 Current user state:', {
+        hasUser: !!user,
+        isLoggedIn: user?.isLoggedIn,
+        userEmail: user?.email
       });
-
-      if (error) {
-        console.error('Google sign-in error:', error);
+      
+      // Use the robust sign-in function from AppContext
+      const result = await signInWithGoogle();
+      
+      console.log('🔍 COMPREHENSIVE LOGIN DEBUG - Step 2: Sign-in result:', result);
+      
+      if (result.success) {
+        console.log('✅ COMPREHENSIVE LOGIN DEBUG - Google sign-in initiated successfully');
+        console.log('✅ User should be redirected to Google OAuth now');
         toast({
-          title: "Sign-in Error",
-          description: error.message || "Failed to sign in with Google. Please try again.",
-          variant: "destructive",
+          title: "Signing you in...",
+          description: "Please wait while we set up your account.",
         });
+      } else {
+        console.error('❌ COMPREHENSIVE LOGIN DEBUG - Google sign-in failed:', result.error);
+        
+        // Only show error toast for actual failures, not database trigger issues
+        if (result.error && !result.error.message?.includes('Database error saving new user')) {
+          console.error('❌ COMPREHENSIVE LOGIN DEBUG - Showing error toast for non-database error');
+          toast({
+            title: "Sign-in Error",
+            description: result.error.message || "Failed to sign in with Google. Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('🔧 COMPREHENSIVE LOGIN DEBUG - Database error detected, showing informative message');
+          // For database errors, show informative message
+          toast({
+            title: "Almost there!",
+            description: "Authentication is processing. You'll be redirected shortly.",
+          });
+        }
       }
     } catch (error) {
-      console.error('Unexpected error during sign-in:', error);
+      console.error('❌ COMPREHENSIVE LOGIN DEBUG - Unexpected error during sign-in:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

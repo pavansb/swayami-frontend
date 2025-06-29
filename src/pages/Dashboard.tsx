@@ -22,7 +22,7 @@ const Dashboard = () => {
   
   // Group tasks by goal
   const tasksByGoal = goals.reduce((acc, goal) => {
-    acc[goal.title] = todaysTasks.filter(task => task.goal_id === goal.id);
+    acc[goal.title] = todaysTasks.filter(task => task.goal_id === goal._id);
     return acc;
   }, {} as Record<string, typeof todaysTasks>);
 
@@ -35,7 +35,7 @@ const Dashboard = () => {
   const handleAddTask = (goalType: string) => {
     const title = newTaskTitles[goalType];
     if (title?.trim()) {
-      const linkedGoal = goals.find(g => g.title === goalType)?.id;
+      const linkedGoal = goals.find(g => g.title === goalType)?._id;
       addTask({
         title,
         status: 'pending',
@@ -109,12 +109,12 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {goals.map((goal) => {
-                    const goalTasks = tasks.filter(task => task.goal_id === goal.id);
+                    const goalTasks = tasks.filter(task => task.goal_id === goal._id);
                     const completedGoalTasks = goalTasks.filter(task => task.status === 'completed');
                     const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
                     
                     return (
-                      <div key={goal.id} className="border border-gray-200 rounded-xl p-4">
+                      <div key={goal._id} className="border border-gray-200 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-gray-900 text-sm sm:text-base">{goal.title}</h4>
                           <div className="flex space-x-1">
@@ -198,16 +198,16 @@ const Dashboard = () => {
                   <div className="space-y-3 mb-4">
                     {goalTasks.map((task) => (
                       <div 
-                        key={task.id} 
+                        key={task._id} 
                         className="flex items-center space-x-3 p-3 sm:p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow bg-white"
                       >
                         <Checkbox
                           checked={task.status === 'completed'}
-                          onCheckedChange={() => toggleTask(task.id)}
+                          onCheckedChange={() => toggleTask(task._id)}
                           className="flex-shrink-0"
                         />
                         
-                        {editingTask === task.id ? (
+                        {editingTask === task._id ? (
                           <div className="flex-1 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                             <Input
                               value={editTitle}
@@ -232,7 +232,7 @@ const Dashboard = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleEditTask(task.id, task.title)}
+                                onClick={() => handleEditTask(task._id, task.title)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -240,7 +240,7 @@ const Dashboard = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deleteTask(task.id)}
+                                onClick={() => deleteTask(task._id)}
                                 className="h-8 w-8 p-0"
                               >
                                 <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -362,10 +362,10 @@ const Dashboard = () => {
                 <h3 className="font-semibold text-gray-900 mb-4 text-base sm:text-lg">Daily Habits</h3>
                 <div className="space-y-3">
                   {habits.map((habit) => (
-                    <div key={habit.id} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white">
+                    <div key={habit._id} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-white">
                       <Checkbox
                         checked={habit.completed}
-                        onCheckedChange={() => toggleHabit(habit.id)}
+                        onCheckedChange={() => toggleHabit(habit._id)}
                         className="flex-shrink-0"
                       />
                       <span className="text-lg sm:text-xl">{habit.emoji}</span>
