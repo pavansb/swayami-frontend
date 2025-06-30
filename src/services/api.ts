@@ -162,6 +162,14 @@ class ApiService {
       return this.isBackendAvailable;
     }
 
+    // Smart staging detection - if URL contains placeholder or staging marker, skip HTTP check
+    if (this.baseURL.includes('placeholder') || this.baseURL.includes('api-staging-placeholder')) {
+      console.log('🚧 STAGING ENVIRONMENT: Skipping HTTP check for placeholder backend URL');
+      console.log('🚧 Backend URL contains "placeholder" - marking as unavailable to enable fallback mode');
+      this.isBackendAvailable = false;
+      return false;
+    }
+
     try {
       console.log('🔍 CHECKING BACKEND AVAILABILITY:', this.baseURL);
       
@@ -289,11 +297,24 @@ class ApiService {
   }
 
   async createGoal(goal: { title: string; description: string; priority: string; target_date?: string }) {
+    // Create fallback goal for staging environment
+    const fallbackGoal = {
+      _id: `mock_goal_${Date.now()}`,
+      user_id: 'mock_user_123',
+      title: goal.title,
+      description: goal.description,
+      priority: goal.priority,
+      target_date: goal.target_date,
+      status: 'active' as const,
+      progress: 0,
+      created_at: new Date().toISOString()
+    };
+
     return this.makeRequestWithFallback(`${this.baseURL}/api/goals`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(goal),
-    });
+    }, fallbackGoal); // Provide fallback goal
   }
 
   async getTasks() {
@@ -303,11 +324,24 @@ class ApiService {
   }
 
   async createTask(task: { title: string; description?: string; goal_id?: string; priority: string; due_date?: string }) {
+    // Create fallback task for staging environment
+    const fallbackTask = {
+      _id: `mock_task_${Date.now()}`,
+      user_id: 'mock_user_123',
+      title: task.title,
+      description: task.description,
+      goal_id: task.goal_id,
+      priority: task.priority,
+      due_date: task.due_date,
+      status: 'pending' as const,
+      created_at: new Date().toISOString()
+    };
+
     return this.makeRequestWithFallback(`${this.baseURL}/api/tasks`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(task),
-    });
+    }, fallbackTask); // Provide fallback task
   }
 
   async updateTask(taskId: string, updates: { status?: string; title?: string; description?: string }) {
