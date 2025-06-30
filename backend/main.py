@@ -43,18 +43,51 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS middleware
+# CORS middleware with comprehensive configuration for both dev and production
+ALLOWED_ORIGINS = [
+    # Local development origins
+    "http://localhost:3000",
+    "http://localhost:3001", 
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    # Production/Staging origins
+    "https://swayami-focus-mirror.lovable.app",
+    "https://app.swayami.com",  # Future production domain
+]
+
+ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+ALLOWED_HEADERS = [
+    "Content-Type", 
+    "Authorization", 
+    "Access-Control-Allow-Origin",
+    "Accept",
+    "Origin",
+    "User-Agent",
+    "DNT",
+    "Cache-Control",
+    "X-Mx-ReqToken",
+    "Keep-Alive",
+    "X-Requested-With",
+    "If-Modified-Since",
+]
+
+logger.info("🔧 CORS Configuration:")
+logger.info(f"🔧 Allowed Origins: {ALLOWED_ORIGINS}")
+logger.info(f"🔧 Allowed Methods: {ALLOWED_METHODS}")
+logger.info(f"🔧 Allowed Headers: {ALLOWED_HEADERS}")
+logger.info("🔧 Allow Credentials: True")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=ALLOWED_METHODS,
+    allow_headers=ALLOWED_HEADERS,
+    expose_headers=["*"],  # Allow frontend to access response headers
 )
 
 # Health check endpoint
@@ -76,6 +109,45 @@ async def health_check():
         "database": "connected",
         "auth": "mock_enabled"
     }
+
+# CORS debugging endpoint
+@app.get("/cors-test")
+async def cors_test():
+    """Test endpoint to verify CORS configuration is working"""
+    return {
+        "message": "✅ CORS is working correctly!",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "allowed_origins": ALLOWED_ORIGINS,
+        "allowed_methods": ALLOWED_METHODS,
+        "server": "FastAPI",
+        "cors_status": "enabled"
+    }
+
+# CORS debugging middleware
+@app.middleware("http")
+async def cors_debug_middleware(request, call_next):
+    origin = request.headers.get("origin")
+    method = request.method
+    
+    # Log CORS-related requests for debugging
+    if origin or method == "OPTIONS":
+        logger.info(f"🔍 CORS Request - Method: {method}, Origin: {origin}, Path: {request.url.path}")
+        
+        if origin and origin not in ALLOWED_ORIGINS:
+            logger.warning(f"⚠️ CORS Warning - Origin '{origin}' not in allowed origins")
+        
+        if method == "OPTIONS":
+            logger.info("🔧 CORS Preflight request detected")
+    
+    response = await call_next(request)
+    
+    # Log CORS response headers for debugging
+    if origin or method == "OPTIONS":
+        cors_headers = {k: v for k, v in response.headers.items() if "access-control" in k.lower()}
+        if cors_headers:
+            logger.info(f"🔧 CORS Response Headers: {cors_headers}")
+    
+    return response
 
 # Include routers
 app.include_router(auth.router, prefix="/api")

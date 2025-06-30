@@ -1,3 +1,26 @@
+/**
+ * Swayami Frontend Configuration
+ * 
+ * SECURITY ARCHITECTURE NOTES:
+ * ============================
+ * 
+ * ✅ SECURE: Frontend → FastAPI Backend → MongoDB Atlas
+ * ❌ INSECURE: Frontend → MongoDB Data API (Direct Access)
+ * 
+ * WHY NO DIRECT MONGODB ACCESS FROM FRONTEND:
+ * 1. Security Risk: Database credentials exposed to client
+ * 2. No Server-Side Validation: Business logic can be bypassed
+ * 3. CORS Issues: Cross-origin requests to MongoDB Atlas
+ * 4. No Rate Limiting: Potential for abuse and excessive usage
+ * 5. No Authentication Layer: Can't implement proper user authorization
+ * 
+ * OUR SECURE APPROACH:
+ * - Frontend authenticates via Supabase (Google OAuth)
+ * - All database operations go through FastAPI backend
+ * - FastAPI handles validation, business logic, and security
+ * - MongoDB credentials stay secure on the server side
+ */
+
 export interface Config {
   API_BASE_URL: string;
   ENVIRONMENT: 'development' | 'qa' | 'production';

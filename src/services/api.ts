@@ -147,6 +147,139 @@ class ApiService {
 
     return this.handleResponse(response);
   }
+
+  // User Management Methods
+  async getUserByEmail(email: string) {
+    const response = await fetch(`${this.baseURL}/api/users/by-email/${encodeURIComponent(email)}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async createUser(userData: { google_id: string; email: string; full_name: string; avatar_url?: string }) {
+    const response = await fetch(`${this.baseURL}/api/users`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(userData),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async updateUserProfile(userId: string, updates: { full_name?: string; avatar_url?: string; level?: string }) {
+    const response = await fetch(`${this.baseURL}/api/users/${userId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(updates),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async updateUserOnboarding(userId: string, completed: boolean) {
+    const response = await fetch(`${this.baseURL}/api/users/${userId}/onboarding`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ has_completed_onboarding: completed }),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Enhanced Goal Methods
+  async getUserGoals(userId: string) {
+    const response = await fetch(`${this.baseURL}/api/goals/user/${userId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async updateGoalProgress(goalId: string, progress: number) {
+    const response = await fetch(`${this.baseURL}/api/goals/${goalId}/progress`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ progress }),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Enhanced Task Methods
+  async getUserTasks(userId: string) {
+    const response = await fetch(`${this.baseURL}/api/tasks/user/${userId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async updateTaskStatus(taskId: string, status: string) {
+    const response = await fetch(`${this.baseURL}/api/tasks/${taskId}/status`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async deleteTask(taskId: string) {
+    const response = await fetch(`${this.baseURL}/api/tasks/${taskId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // Enhanced Journal Methods
+  async getUserJournalEntries(userId: string) {
+    const response = await fetch(`${this.baseURL}/api/journals/user/${userId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async createJournalEntry(entryData: { user_id: string; content: string; mood_score?: number }) {
+    const response = await fetch(`${this.baseURL}/api/journals`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(entryData),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async updateJournalEntry(entryId: string, updates: Partial<{ content: string; mood_score: number }>) {
+    const response = await fetch(`${this.baseURL}/api/journals/${entryId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(updates),
+    });
+
+    return this.handleResponse(response);
+  }
+
+  // CORS Testing Method
+  async testCORS() {
+    try {
+      const response = await fetch(`${this.baseURL}/cors-test`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin,
+        },
+      });
+
+      return this.handleResponse(response);
+    } catch (error) {
+      console.error('CORS Test Failed:', error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = new ApiService(); 
