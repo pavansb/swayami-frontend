@@ -16,14 +16,16 @@ const AuthCallback = () => {
       try {
         // COMPREHENSIVE LOGGING - Step 1: Initial URL analysis
         const currentUrl = window.location.href;
+        const isProduction = currentUrl.includes('lovable.app');
         const error = searchParams.get('error');
         const errorCode = searchParams.get('error_code');
         const errorDescription = searchParams.get('error_description');
         const code = searchParams.get('code');
         const accessToken = searchParams.get('access_token');
         
-        console.log('🔍 CRITICAL DATABASE TRIGGER ANALYSIS - Step 1: URL Analysis');
+        console.log('🔍 STAGING/PRODUCTION AUTH DEBUG - Step 1: Environment Analysis');
         console.log('🔍 Current URL:', currentUrl);
+        console.log('🔍 Is Production:', isProduction);
         console.log('🔍 Error param:', error);
         console.log('🔍 Error code param:', errorCode);
         console.log('🔍 Error description param:', errorDescription);
@@ -32,6 +34,7 @@ const AuthCallback = () => {
 
         setDebugInfo({
           currentUrl,
+          isProduction,
           error,
           errorCode,
           errorDescription,
@@ -49,24 +52,24 @@ const AuthCallback = () => {
           
           setStatus('trigger_error');
           setMessage('Database trigger is blocking authentication. Immediate fix required.');
-          
-          // Show critical fix instructions
           return;
         }
 
-        // COMPREHENSIVE LOGGING - Step 2: Session check (immediate)
-        console.log('🔍 COMPREHENSIVE AUTH DEBUG - Step 2: Immediate Session Check');
-        let sessionResult = await supabase.auth.getSession();
-        console.log('🔍 Immediate session result:', {
-          hasSession: !!sessionResult.data.session,
-          hasUser: !!sessionResult.data.session?.user,
-          userEmail: sessionResult.data.session?.user?.email,
-          sessionError: sessionResult.error
-        });
+        // PRODUCTION-SPECIFIC: Check for OAuth redirect URL mismatch
+        if (error && (error === 'redirect_uri_mismatch' || errorDescription?.includes('redirect_uri'))) {
+          console.log('🚨 OAUTH REDIRECT URL MISMATCH DETECTED!');
+          console.log('🔍 ANALYSIS: Google OAuth redirect URLs not configured for staging domain');
+          console.log('💡 SOLUTION: Update Google Console and Supabase redirect URLs');
+          
+          setStatus('error');
+          setMessage('OAuth configuration error. Please check redirect URLs in Google Console and Supabase.');
+          setTimeout(() => navigate('/login'), 10000); // Longer timeout for reading error
+          return;
+        }
 
-        // Handle other OAuth errors
+        // Handle other OAuth errors  
         if (error) {
-          console.log('🔍 COMPREHENSIVE AUTH DEBUG - Step 3: Other Error Handling');
+          console.log('🔍 STAGING AUTH DEBUG - Step 3: Other Error Handling');
           console.error('❌ AuthCallback: OAuth error detected:', error, errorDescription);
           setStatus('error');
           setMessage(`Authentication failed: ${errorDescription || error}`);
@@ -74,33 +77,78 @@ const AuthCallback = () => {
           return;
         }
 
+        // COMPREHENSIVE LOGGING - Step 2: Session check with retries for staging
+        console.log('🔍 STAGING AUTH DEBUG - Step 2: Session Check with Retries');
+        let sessionResult = await supabase.auth.getSession();
+        console.log('🔍 Initial session result:', {
+          hasSession: !!sessionResult.data.session,
+          hasUser: !!sessionResult.data.session?.user,
+          userEmail: sessionResult.data.session?.user?.email,
+          sessionError: sessionResult.error
+        });
+
+        // STAGING FIX: If no session but we have auth code, retry session check
+        if (!sessionResult.data.session && code) {
+          console.log('🔄 STAGING AUTH DEBUG - Retrying session check (OAuth code present)');
+          
+          // Wait a bit for session to be established
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          sessionResult = await supabase.auth.getSession();
+          
+          console.log('🔍 Retry session result:', {
+            hasSession: !!sessionResult.data.session,
+            hasUser: !!sessionResult.data.session?.user,
+            userEmail: sessionResult.data.session?.user?.email,
+            sessionError: sessionResult.error
+          });
+        }
+
+        // STAGING FIX: Try exchanging auth code for session if still no session
+        if (!sessionResult.data.session && code) {
+          console.log('🔄 STAGING AUTH DEBUG - Attempting to exchange auth code for session');
+          try {
+            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            if (data.session) {
+              console.log('✅ STAGING AUTH DEBUG - Successfully exchanged code for session');
+              sessionResult = { data: { session: data.session }, error: null };
+            } else {
+              console.error('❌ STAGING AUTH DEBUG - Failed to exchange code:', exchangeError);
+            }
+          } catch (exchangeError) {
+            console.error('❌ STAGING AUTH DEBUG - Exception during code exchange:', exchangeError);
+          }
+        }
+
         // COMPREHENSIVE LOGGING - Step 5: Success case handling
-        console.log('🔍 COMPREHENSIVE AUTH DEBUG - Step 5: Success Case Handling');
+        console.log('🔍 STAGING AUTH DEBUG - Step 5: Success Case Handling');
         
-        // Check for successful authentication (no error params)
+        // Check for successful authentication
         if (sessionResult.data.session?.user) {
-          console.log('✅ COMPREHENSIVE AUTH DEBUG - Normal Authentication Success');
+          console.log('✅ STAGING AUTH DEBUG - Authentication Success');
           console.log('✅ User:', sessionResult.data.session.user.email);
           
           setStatus('success');
           setMessage(`Welcome, ${sessionResult.data.session.user.email}! Redirecting...`);
           
+          // STAGING FIX: Wait for app context to catch up
           setTimeout(() => {
             if (user?.hasCompletedOnboarding) {
+              console.log('🔄 STAGING AUTH DEBUG - Redirecting to dashboard');
               navigate('/dashboard');
             } else {
+              console.log('🔄 STAGING AUTH DEBUG - Redirecting to onboarding');
               navigate('/onboarding');
             }
           }, 2000);
         } else {
-          console.warn('⚠️ COMPREHENSIVE AUTH DEBUG - No session found in success case');
+          console.warn('⚠️ STAGING AUTH DEBUG - No session found in success case');
           setStatus('error');
-          setMessage('No authentication session found');
-          setTimeout(() => navigate('/login'), 3000);
+          setMessage('Authentication session could not be established. Please try again.');
+          setTimeout(() => navigate('/login'), 5000);
         }
         
       } catch (error) {
-        console.error('❌ COMPREHENSIVE AUTH DEBUG - Unexpected Error:', error);
+        console.error('❌ STAGING AUTH DEBUG - Unexpected Error:', error);
         setStatus('error');
         setMessage('An unexpected error occurred during authentication');
         setTimeout(() => navigate('/login'), 3000);
@@ -134,6 +182,10 @@ const AuthCallback = () => {
     window.open('https://supabase.com/dashboard/project/nqpvomjuaszhwfdhnmik/sql', '_blank');
   };
 
+  const openGoogleConsole = () => {
+    window.open('https://console.cloud.google.com/apis/credentials', '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="max-w-2xl w-full text-center">
@@ -164,6 +216,42 @@ const AuthCallback = () => {
         {status === 'loading' && (
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9650D4]"></div>
+          </div>
+        )}
+
+        {/* OAuth Configuration Error */}
+        {status === 'error' && debugInfo.error === 'redirect_uri_mismatch' && (
+          <div className="mt-6 space-y-4">
+            <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
+              <h3 className="font-bold text-yellow-800 mb-3">🔧 OAuth Configuration Required</h3>
+              <p className="text-sm text-yellow-700 mb-4">
+                The Google OAuth application needs to be configured for the staging domain.
+              </p>
+              
+              <div className="space-y-3">
+                <h4 className="font-semibold text-yellow-800">Required Steps:</h4>
+                <ol className="text-sm text-yellow-700 space-y-2">
+                  <li>1. Update Google Console OAuth redirect URLs</li>
+                  <li>2. Update Supabase auth configuration</li>
+                  <li>3. Add staging domain to allowed origins</li>
+                </ol>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={openGoogleConsole}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm font-medium"
+                  >
+                    Open Google Console
+                  </button>
+                  <button
+                    onClick={openSupabaseDashboard}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
+                  >
+                    Open Supabase
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -229,7 +317,7 @@ const AuthCallback = () => {
         )}
 
         {/* Error actions */}
-        {status === 'error' && (
+        {status === 'error' && debugInfo.error !== 'redirect_uri_mismatch' && (
           <div className="mt-6 space-y-4">
             <button
               onClick={() => navigate('/login')}
@@ -240,10 +328,12 @@ const AuthCallback = () => {
           </div>
         )}
 
-        {/* Debug info (only in development) */}
-        {import.meta.env.DEV && (
+        {/* Debug info */}
+        {(import.meta.env.DEV || debugInfo.isProduction) && (
           <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left text-sm text-gray-600 max-h-60 overflow-y-auto">
             <strong>Debug Info:</strong>
+            <br />
+            Environment: {debugInfo.isProduction ? 'Production/Staging' : 'Development'}
             <br />
             Status: {status}
             <br />

@@ -320,26 +320,37 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      // COMPREHENSIVE PORT & REDIRECT DEBUG
+      // COMPREHENSIVE PORT & REDIRECT DEBUG for STAGING/PRODUCTION
       const currentOrigin = window.location.origin;
       const currentPort = window.location.port;
       const currentHostname = window.location.hostname;
+      const isProduction = currentOrigin.includes('lovable.app');
       const expectedRedirectUrl = `${currentOrigin}/auth/callback`;
       
-      console.log('🔄 COMPREHENSIVE SIGN-IN DEBUG - Step 1: Initiating Google OAuth...');
-      console.log('🔍 CRITICAL - Port & URL Analysis:');
+      console.log('🔄 STAGING/PRODUCTION SIGN-IN DEBUG - Step 1: Initiating Google OAuth...');
+      console.log('🔍 CRITICAL - Environment & URL Analysis:');
       console.log('🔍 Current origin:', currentOrigin);
       console.log('🔍 Current port:', currentPort);
       console.log('🔍 Current hostname:', currentHostname);
+      console.log('🔍 Is Production/Staging:', isProduction);
       console.log('🔍 Expected redirect URL:', expectedRedirectUrl);
       console.log('🔍 Full current URL:', window.location.href);
       
-      // Check for common port mismatch issues
-      if (currentPort !== '3000' && currentPort !== '') {
-        console.warn('⚠️ CRITICAL PORT ISSUE DETECTED!');
-        console.warn('⚠️ Server is running on port', currentPort, 'but OAuth might be configured for port 3000');
-        console.warn('⚠️ This WILL cause OAuth redirect failures!');
-        console.warn('⚠️ Solution: Update OAuth redirect URLs or restart server on port 3000');
+      // STAGING/PRODUCTION WARNING CHECKS
+      if (isProduction) {
+        console.log('🚀 PRODUCTION ENVIRONMENT DETECTED!');
+        console.log('🔍 Production redirect URL:', expectedRedirectUrl);
+        console.log('💡 Ensure this URL is configured in:');
+        console.log('💡 1. Google Console OAuth redirect URIs');
+        console.log('💡 2. Supabase Auth redirect URLs');
+      } else {
+        // Check for common local development port issues
+        if (currentPort !== '3000' && currentPort !== '') {
+          console.warn('⚠️ LOCAL DEV PORT ISSUE DETECTED!');
+          console.warn('⚠️ Server is running on port', currentPort, 'but OAuth might be configured for port 3000');
+          console.warn('⚠️ This WILL cause OAuth redirect failures!');
+          console.warn('⚠️ Solution: Update OAuth redirect URLs or restart server on port 3000');
+        }
       }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -353,12 +364,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      console.log('🔍 COMPREHENSIVE SIGN-IN DEBUG - Step 2: OAuth Response');
+      console.log('🔍 STAGING/PRODUCTION SIGN-IN DEBUG - Step 2: OAuth Response');
       console.log('🔍 OAuth Data:', data);
       console.log('🔍 OAuth Error:', error);
 
       if (error) {
-        console.error('❌ COMPREHENSIVE SIGN-IN DEBUG - OAuth Error Details:');
+        console.error('❌ STAGING/PRODUCTION SIGN-IN DEBUG - OAuth Error Details:');
         console.error('❌ Error message:', error.message);
         console.error('❌ Error details:', error);
         
@@ -367,7 +378,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           console.error('🔧 REDIRECT URI MISMATCH DETECTED!');
           console.error('💡 The OAuth redirect URL in Google/Supabase doesn\'t match current server URL');
           console.error('💡 Current redirect URL:', expectedRedirectUrl);
-          console.error('🛠️ Fix: Update OAuth redirect URLs in Google Console and Supabase Dashboard');
+          console.error('🛠️ IMMEDIATE FIX REQUIRED:');
+          console.error('🛠️ 1. Google Console: Add', expectedRedirectUrl);
+          console.error('🛠️ 2. Supabase Dashboard: Update redirect URLs');
+          console.error('🛠️ 3. Verify Site URL in Supabase matches:', currentOrigin);
         }
         
         if (error.message.includes('Database error saving new user')) {
@@ -383,13 +397,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error };
       }
 
-      console.log('✅ COMPREHENSIVE SIGN-IN DEBUG - OAuth initiated successfully');
+      console.log('✅ STAGING/PRODUCTION SIGN-IN DEBUG - OAuth initiated successfully');
       console.log('✅ User should be redirected to Google OAuth now');
       console.log('✅ Expected callback URL:', expectedRedirectUrl);
+      console.log('✅ Environment:', isProduction ? 'Production/Staging' : 'Development');
       return { success: true, error: null };
       
     } catch (error) {
-      console.error('❌ COMPREHENSIVE SIGN-IN DEBUG - Unexpected error during Google sign-in:', error);
+      console.error('❌ STAGING/PRODUCTION SIGN-IN DEBUG - Unexpected error during Google sign-in:', error);
       return { success: false, error };
     }
   };
