@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { mongoService } from '../services/mongoService';
+import { apiService } from '../services/api';
 
 // Interfaces
 interface Goal {
@@ -152,13 +152,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('🔄 MongoDB App: Initializing user from Supabase auth...');
       
-      // First, try to find user in MongoDB
-      let mongoUser = await mongoService.getUserByEmail(supabaseUser.email || '');
+      // First, try to find user in MongoDB using API service
+      let mongoUser = await apiService.getUserByEmail(supabaseUser.email || '');
       
       if (!mongoUser) {
         console.log('👤 MongoDB App: Creating new user in MongoDB...');
-        // Create user in MongoDB
-        mongoUser = await mongoService.createUser({
+        // Create user in MongoDB using API service
+        mongoUser = await apiService.createUser({
           google_id: supabaseUser.id,
           email: supabaseUser.email || '',
           full_name: supabaseUser.user_metadata?.full_name || 
@@ -194,11 +194,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('📊 MongoDB App: Loading user data...');
       
-      // Load goals, tasks, and journal entries in parallel
+      // Load goals, tasks, and journal entries in parallel using API service
       const [goalsData, tasksData, journalsData] = await Promise.all([
-        mongoService.getUserGoals(userId),
-        mongoService.getUserTasks(userId),
-        mongoService.getUserJournalEntries(userId)
+        apiService.getUserGoals(userId),
+        apiService.getUserTasks(userId),
+        apiService.getUserJournalEntries(userId)
       ]);
 
       console.log('📊 MongoDB App: Loaded data:', {
@@ -262,10 +262,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('🎯 MongoDB App: Completing onboarding with goals:', selectedGoals);
 
-      // Create goals in MongoDB
+      // Create goals in MongoDB using API service
       const createdGoals: Goal[] = [];
       for (const goalData of selectedGoals) {
-        const goal = await mongoService.createGoal({
+        const goal = await apiService.createGoal({
           user_id: user._id,
           title: goalData.type,
           description: goalData.description,
@@ -279,8 +279,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         });
       }
 
-      // Update user onboarding status
-      await mongoService.updateUserOnboarding(user._id, true);
+      // Update user onboarding status using API service
+      await apiService.updateUserOnboarding(user._id, true);
 
       // Update local state
       setGoals(createdGoals);
@@ -298,11 +298,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       console.log('📝 MongoDB App: Adding task:', task.title);
-      const newTask = await mongoService.createTask({
+      const newTask = await apiService.createTask({
         user_id: user._id,
-        goal_id: task.goal_id || '',
         title: task.title,
         description: task.description,
+        goal_id: task.goal_id,
         priority: task.priority,
         status: task.status
       });
@@ -325,7 +325,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
 
     try {
-      await mongoService.updateTaskStatus(taskId, newStatus);
+      await apiService.updateTaskStatus(taskId, newStatus);
       setTasks(prev => 
         prev.map(t => 
           t._id === taskId ? { ...t, status: newStatus } : t
@@ -340,7 +340,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user?._id) return;
 
     try {
-      await mongoService.deleteTask(taskId);
+      await apiService.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t._id !== taskId));
     } catch (error) {
       console.error('❌ MongoDB App: Error deleting task:', error);
@@ -351,7 +351,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user?._id) return;
 
     try {
-      await mongoService.updateTaskStatus(taskId, updates.status || 'pending');
+      await apiService.updateTaskStatus(taskId, updates.status || 'pending');
       setTasks(prev => 
         prev.map(t => 
           t._id === taskId ? { ...t, ...updates } : t
@@ -366,7 +366,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user?._id) return;
 
     try {
-      const newEntry = await mongoService.createJournalEntry({
+      const newEntry = await apiService.createJournalEntry({
         user_id: user._id,
         content: entry.content,
         mood_score: entry.mood_score
@@ -379,7 +379,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateJournalEntry = async (entryId: string, updates: Partial<JournalEntry>) => {
-    // MongoDB service doesn't have update journal entry yet
+    // API service doesn't have update journal entry yet
     console.log('🔄 MongoDB App: Journal entry update not implemented yet');
   };
 
