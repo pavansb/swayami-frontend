@@ -340,11 +340,92 @@ class ApiService {
     }, []); // Fallback to empty array
   }
 
-  async analyzeJournal(journalId: string) {
+  // Enhanced AI Methods - All route through FastAPI backend for security
+  async generateTasksFromGoalTitle(goalTitle: string, goalDescription: string) {
+    console.log('🤖 GENERATING TASKS VIA BACKEND:', { goalTitle, goalDescription });
+    
+    return this.makeRequestWithFallback(`${this.baseURL}/api/ai/generate-tasks-from-goal`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({ 
+        goal_title: goalTitle, 
+        goal_description: goalDescription 
+      }),
+    }, {
+      // Secure fallback response when backend is unavailable
+      tasks: [
+        {
+          title: `Work on ${goalTitle}`,
+          description: goalDescription || 'Focus on achieving this goal step by step',
+          priority: 'medium',
+          estimatedDuration: 60
+        }
+      ],
+      goalAnalysis: 'This goal requires focused effort and consistent action. Break it down into smaller, manageable steps.'
+    });
+  }
+
+  async generateDailyBreakdown(tasks: any[], goalTitle: string, goalDescription: string, timeframe: string = '7 days') {
+    console.log('📅 GENERATING DAILY BREAKDOWN VIA BACKEND:', { tasks, goalTitle, timeframe });
+    
+    return this.makeRequestWithFallback(`${this.baseURL}/api/ai/generate-daily-breakdown`, {
+      method: 'POST', 
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({
+        tasks: tasks,
+        goal_title: goalTitle,
+        goal_description: goalDescription,
+        timeframe: timeframe
+      }),
+    }, {
+      // Secure fallback response
+      weeklyPlan: [
+        {
+          day: "Monday",
+          tasks: [
+            {
+              title: "Start working on your goal",
+              description: "Begin with the first task from your action plan",
+              estimatedDuration: 60,
+              priority: "medium"
+            }
+          ]
+        }
+      ],
+      totalDuration: 420,
+      tips: ["Start small and build momentum", "Track your progress daily", "Celebrate small wins"]
+    });
+  }
+
+  async analyzeJournal(content: string) {
+    console.log('📔 ANALYZING JOURNAL VIA BACKEND:', { contentLength: content.length });
+    
     return this.makeRequestWithFallback(`${this.baseURL}/api/ai/analyze-journal`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
-      body: JSON.stringify({ journal_id: journalId }),
+      body: JSON.stringify({ content }),
+    }, {
+      // Secure fallback response
+      summary: 'Journal entry recorded successfully.',
+      mood: 3,
+      insights: ['Reflection is valuable for personal growth'],
+      recommendations: ['Continue journaling regularly']
+    });
+  }
+
+  async generateMotivationalMessage(goalTitle: string, recentProgress: string) {
+    console.log('✨ GENERATING MOTIVATION VIA BACKEND:', { goalTitle, recentProgress });
+    
+    return this.makeRequestWithFallback(`${this.baseURL}/api/ai/motivational-message`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify({ 
+        goal_title: goalTitle, 
+        recent_progress: recentProgress 
+      }),
+    }, {
+      // Secure fallback response
+      message: 'Keep up the great work! Every step forward counts toward your success.'
     });
   }
 

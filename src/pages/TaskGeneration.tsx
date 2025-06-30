@@ -3,9 +3,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/contexts/AppContext';
-import { openaiService, TaskSuggestion } from '@/services/openaiService';
+import { apiService } from '@/services/api';
 import { Sparkles, RefreshCw, Star, Clock, ArrowRight, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
+// Define task types here since we removed the dangerous OpenAI service
+interface TaskSuggestion {
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  estimatedDuration?: number; // in minutes
+}
+
+interface TaskGenerationResponse {
+  tasks: TaskSuggestion[];
+  goalAnalysis: string;
+}
 
 interface GoalWithTasks {
   goalId: string;
@@ -50,19 +63,27 @@ const TaskGeneration = () => {
 
     for (const goal of goalsToProcess) {
       try {
-        const response = await openaiService.generateTasksFromGoal(
+        const response = await apiService.generateTasksFromGoalTitle(
           goal.title || goal.type,
           goal.description || ''
         );
+
+        // Type-safe conversion of backend response
+        const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: any) => ({
+          title: task.title,
+          description: task.description,
+          priority: (task.priority as 'low' | 'medium' | 'high') || 'medium',
+          estimatedDuration: task.estimatedDuration || 60
+        }));
 
         newGoalsWithTasks.push({
           goalId: goal._id || goal.type,
           goalTitle: goal.title || goal.type,
           goalDescription: goal.description || '',
-          tasks: response.tasks,
-          analysis: response.goalAnalysis,
+          tasks: typedTasks,
+          analysis: response.goalAnalysis || 'This goal requires focused effort and consistent action.',
           rating: 0,
-          selectedTasks: response.tasks.map(() => true) // Select all by default
+          selectedTasks: typedTasks.map(() => true) // Select all by default
         });
       } catch (error) {
         console.error('Error generating tasks for goal:', goal.title, error);
@@ -74,7 +95,7 @@ const TaskGeneration = () => {
           tasks: [{
             title: `Work on ${goal.title}`,
             description: goal.description || 'Focus on achieving this goal',
-            priority: 'medium',
+            priority: 'medium' as const,
             estimatedDuration: 60
           }],
           analysis: 'This goal requires focused effort and consistent action.',
@@ -101,18 +122,26 @@ const TaskGeneration = () => {
     if (!goalToRegenerate) return;
 
     try {
-      const response = await openaiService.generateTasksFromGoal(
+      const response = await apiService.generateTasksFromGoalTitle(
         goalToRegenerate.goalTitle,
         goalToRegenerate.goalDescription
       );
+
+      // Type-safe conversion of backend response
+      const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: any) => ({
+        title: task.title,
+        description: task.description,
+        priority: (task.priority as 'low' | 'medium' | 'high') || 'medium',
+        estimatedDuration: task.estimatedDuration || 60
+      }));
 
       setGoalsWithTasks(prev => prev.map(goal => 
         goal.goalId === goalId 
           ? {
               ...goal,
-              tasks: response.tasks,
-              analysis: response.goalAnalysis,
-              selectedTasks: response.tasks.map(() => true)
+              tasks: typedTasks,
+              analysis: response.goalAnalysis || 'This goal requires focused effort and consistent action.',
+              selectedTasks: typedTasks.map(() => true)
             }
           : goal
       ));
@@ -269,7 +298,7 @@ const TaskGeneration = () => {
 
       console.log('🗓️ Generating daily breakdown for tasks:', allSelectedTasks);
       
-      const breakdown = await openaiService.generateDailyBreakdown(
+      const breakdown = await apiService.generateDailyBreakdown(
         allSelectedTasks,
         primaryGoal.goalTitle,
         primaryGoal.goalDescription,
