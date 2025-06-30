@@ -226,6 +226,7 @@ class MongoService {
     google_id: string;
     email: string;
     full_name: string;
+    avatar_url?: string;
   }) {
     const userId = crypto.randomUUID();
     const userDoc = {
@@ -233,6 +234,7 @@ class MongoService {
       google_id: userData.google_id,
       email: userData.email,
       full_name: userData.full_name,
+      avatar_url: userData.avatar_url || null,
       has_completed_onboarding: false,
       streak: 0,
       level: 'Mindful Novice',
@@ -304,6 +306,32 @@ class MongoService {
       return true;
     } catch (error) {
       console.error('❌ MongoDB: Error updating user onboarding:', error);
+      return false;
+    }
+  }
+
+  async updateUserProfile(userId: string, updates: {
+    full_name?: string;
+    avatar_url?: string;
+    level?: string;
+  }) {
+    try {
+      await this.makeRequest('updateOne', {
+        collection: 'users',
+        database: DATABASE,
+        dataSource: DATA_SOURCE,
+        filter: { _id: userId },
+        update: {
+          $set: {
+            ...updates,
+            updated_at: new Date().toISOString(),
+          },
+        },
+      });
+      console.log('✅ MongoDB: Updated user profile for user:', userId);
+      return true;
+    } catch (error) {
+      console.error('❌ MongoDB: Error updating user profile:', error);
       return false;
     }
   }

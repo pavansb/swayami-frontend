@@ -17,6 +17,22 @@ interface JournalAnalysisResponse {
   recommendations: string[];
 }
 
+interface DailyTask {
+  day: string; // e.g., "Monday", "Day 1", etc.
+  tasks: {
+    title: string;
+    description: string;
+    estimatedDuration: number; // in minutes
+    priority: 'low' | 'medium' | 'high';
+  }[];
+}
+
+interface DailyBreakdownResponse {
+  weeklyPlan: DailyTask[];
+  totalDuration: number; // total estimated minutes for the week
+  tips: string[];
+}
+
 class OpenAIService {
   private baseURL = 'https://api.openai.com/v1';
   private apiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -225,6 +241,114 @@ Create an encouraging, personalized message (max 50 words) that acknowledges the
     } catch (error) {
       console.error('OpenAI API error:', error);
       return 'Keep up the great work! Every step forward counts.';
+    }
+  }
+
+  async generateDailyBreakdown(tasks: TaskSuggestion[], goalTitle: string, goalDescription: string, timeframe: string = '7 days'): Promise<any> {
+    const taskList = tasks.map(task => `- ${task.title}: ${task.description} (${task.priority} priority, ${task.estimatedDuration || 60} min)`).join('\n');
+    
+    const prompt = `You are a productivity expert helping someone break down their tasks into a manageable daily schedule.
+
+Goal: ${goalTitle}
+Description: ${goalDescription}
+Timeframe: ${timeframe}
+
+Tasks to break down:
+${taskList}
+
+Create a detailed daily action plan that:
+1. Spreads these tasks across ${timeframe}
+2. Considers weekdays vs weekends
+3. Balances workload daily
+4. Includes specific actionable sub-tasks
+5. Accounts for the user's goal context (e.g., weight loss = meal prep on Sunday, cardio on weekdays)
+
+Respond in this exact JSON format:
+{
+  "weeklyPlan": [
+    {
+      "day": "Monday",
+      "tasks": [
+        {
+          "title": "Specific daily task",
+          "description": "Detailed steps for this day",
+          "estimatedDuration": 30,
+          "priority": "medium"
+        }
+      ]
+    }
+  ],
+  "totalDuration": 420,
+  "tips": ["Helpful tip 1", "Helpful tip 2", "Helpful tip 3"]
+}`;
+
+    try {
+      const response = await this.makeRequest('/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a productivity expert. Always respond with valid JSON that breaks down tasks into manageable daily steps.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No response from OpenAI');
+      }
+
+      try {
+        const parsed = JSON.parse(content);
+        console.log('✅ Daily breakdown generated successfully:', parsed);
+        return parsed;
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI daily breakdown response:', content);
+        // Fallback response
+        return {
+          weeklyPlan: [
+            {
+              day: "Monday",
+              tasks: [
+                {
+                  title: "Start working on your goal",
+                  description: "Begin with the first task from your action plan",
+                  estimatedDuration: 60,
+                  priority: "medium"
+                }
+              ]
+            }
+          ],
+          totalDuration: 420,
+          tips: ["Start small and build momentum", "Track your progress daily", "Celebrate small wins"]
+        };
+      }
+    } catch (error) {
+      console.error('OpenAI API error for daily breakdown:', error);
+      // Fallback response
+      return {
+        weeklyPlan: [
+          {
+            day: "Monday", 
+            tasks: [
+              {
+                title: "Work on your goal",
+                description: "Focus on achieving your goal step by step",
+                estimatedDuration: 60,
+                priority: "medium"
+              }
+            ]
+          }
+        ],
+        totalDuration: 420,
+        tips: ["Stay consistent", "Track your progress", "Be patient with yourself"]
+      };
     }
   }
 }

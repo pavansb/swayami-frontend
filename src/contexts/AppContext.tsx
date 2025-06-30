@@ -62,6 +62,7 @@ interface AppContextType {
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
   signInWithGoogle: () => Promise<{ success: boolean; error: any }>;
+  setUser: (user: User | null | ((prev: User | null) => User | null)) => void;
   completeOnboarding: (selectedGoals: { type: string; description: string }[]) => Promise<Goal[]>;
   addTask: (task: Omit<Task, '_id' | 'created_at'>) => Promise<void>;
   toggleTask: (taskId: string) => Promise<void>;
@@ -176,30 +177,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const initializeUserFromSupabase = async (supabaseUser: SupabaseUser) => {
     try {
       console.log('🔄 MongoDB App: Initializing user from Supabase auth...');
+      console.log('🔄 PROFILE PHOTO DEBUG: User metadata:', supabaseUser.user_metadata);
+      
+      // Extract profile photo from Google OAuth
+      const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
+                       supabaseUser.user_metadata?.picture ||
+                       null;
+      
+      console.log('🔄 PROFILE PHOTO DEBUG: Extracted avatar URL:', avatarUrl);
       
       // First, try to find user in MongoDB
       let mongoUser = await mongoService.getUserByEmail(supabaseUser.email || '');
       
       if (!mongoUser) {
         console.log('👤 MongoDB App: Creating new user in MongoDB...');
-        // Create user in MongoDB
+        // Create user in MongoDB with profile photo
         mongoUser = await mongoService.createUser({
           google_id: supabaseUser.id,
           email: supabaseUser.email || '',
           full_name: supabaseUser.user_metadata?.full_name || 
                     supabaseUser.user_metadata?.name ||
                     supabaseUser.email?.split('@')[0] || 
-                    'User'
+                    'User',
+          avatar_url: avatarUrl
         });
+      } else if (avatarUrl && !mongoUser.avatar_url) {
+        console.log('🔄 PROFILE PHOTO DEBUG: Updating existing user with avatar URL...');
+        // Update existing user with avatar if they don't have one
+        await mongoService.updateUserProfile(mongoUser._id, { avatar_url: avatarUrl });
+        mongoUser.avatar_url = avatarUrl;
       }
 
       if (mongoUser) {
         console.log('✅ MongoDB App: User initialized:', mongoUser.email);
+        console.log('✅ PROFILE PHOTO DEBUG: Final avatar URL:', mongoUser.avatar_url);
+        
         setUser({
           _id: mongoUser._id,
           email: mongoUser.email,
           full_name: mongoUser.full_name,
           name: mongoUser.full_name,
+          avatar_url: mongoUser.avatar_url,
           isLoggedIn: true,
           hasCompletedOnboarding: mongoUser.has_completed_onboarding || false,
           streak: mongoUser.streak || 0,
@@ -541,6 +559,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     loginWithToken,
     logout,
     signInWithGoogle,
+    setUser,
     completeOnboarding,
     addTask,
     toggleTask,

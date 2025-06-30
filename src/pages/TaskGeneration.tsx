@@ -26,6 +26,12 @@ const TaskGeneration = () => {
   const [isRegenerating, setIsRegenerating] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Daily breakdown feature states
+  const [showDailyBreakdownPrompt, setShowDailyBreakdownPrompt] = useState(false);
+  const [isGeneratingDailyBreakdown, setIsGeneratingDailyBreakdown] = useState(false);
+  const [dailyBreakdown, setDailyBreakdown] = useState<any>(null);
+  const [showDailyBreakdown, setShowDailyBreakdown] = useState(false);
 
   // Get goals from location state (passed from onboarding) or from context
   const goalsToProcess = location.state?.goals || goals;
@@ -80,6 +86,13 @@ const TaskGeneration = () => {
 
     setGoalsWithTasks(newGoalsWithTasks);
     setIsGenerating(false);
+    
+    // Show daily breakdown prompt after task generation is complete
+    if (newGoalsWithTasks.length > 0) {
+      setTimeout(() => {
+        setShowDailyBreakdownPrompt(true);
+      }, 1000);
+    }
   };
 
   const regenerateTasksForGoal = async (goalId: string) => {
@@ -237,6 +250,50 @@ const TaskGeneration = () => {
   const totalSelectedTasks = goalsWithTasks.reduce((total, goal) => 
     total + goal.selectedTasks.filter(Boolean).length, 0
   );
+
+  const handleDailyBreakdownYes = async () => {
+    setShowDailyBreakdownPrompt(false);
+    setIsGeneratingDailyBreakdown(true);
+    
+    try {
+      // Get all selected tasks from all goals
+      const allSelectedTasks: TaskSuggestion[] = [];
+      let primaryGoal = goalsWithTasks[0]; // Use first goal as primary context
+      
+      goalsWithTasks.forEach(goalWithTasks => {
+        const selectedTasks = goalWithTasks.tasks.filter((_, index) => 
+          goalWithTasks.selectedTasks[index]
+        );
+        allSelectedTasks.push(...selectedTasks);
+      });
+
+      console.log('🗓️ Generating daily breakdown for tasks:', allSelectedTasks);
+      
+      const breakdown = await openaiService.generateDailyBreakdown(
+        allSelectedTasks,
+        primaryGoal.goalTitle,
+        primaryGoal.goalDescription,
+        '7 days'
+      );
+      
+      console.log('✅ Daily breakdown generated:', breakdown);
+      setDailyBreakdown(breakdown);
+      setShowDailyBreakdown(true);
+    } catch (error) {
+      console.error('❌ Error generating daily breakdown:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate daily breakdown. You can still proceed with your tasks.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingDailyBreakdown(false);
+    }
+  };
+
+  const handleDailyBreakdownNo = () => {
+    setShowDailyBreakdownPrompt(false);
+  };
 
   if (isGenerating) {
     return (
@@ -428,6 +485,138 @@ const TaskGeneration = () => {
             </Button>
           </div>
         </div>
+        
+        {/* Daily Breakdown Prompt Modal */}
+        {showDailyBreakdownPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-[#9650D4]" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  ✨ Want Daily Action Steps?
+                </h3>
+                <p className="text-gray-600">
+                  Would you like AI to break these tasks into daily actionable steps? 
+                  This creates a personalized weekly schedule for better tracking.
+                </p>
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button
+                  onClick={handleDailyBreakdownYes}
+                  className="flex-1 bg-[#9650D4] hover:bg-[#8547C4] text-white"
+                >
+                  Yes, Break It Down! 🗓️
+                </Button>
+                <Button
+                  onClick={handleDailyBreakdownNo}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  No, Continue
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Daily Breakdown Generation Loading */}
+        {isGeneratingDailyBreakdown && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#9650D4] mx-auto mb-6"></div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                🧠 AI is planning your week...
+              </h3>
+              <p className="text-gray-600">
+                Creating your personalized daily action plan. This won't take long!
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Daily Breakdown Display */}
+        {showDailyBreakdown && dailyBreakdown && (
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6">
+                <h3 className="text-2xl font-bold mb-2">🗓️ Your Weekly Action Plan</h3>
+                <p className="text-green-100">
+                  AI has created a personalized daily schedule for maximum productivity
+                </p>
+              </div>
+              
+              {/* Weekly Schedule */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 mb-6">
+                  {dailyBreakdown.weeklyPlan.map((day: any, dayIndex: number) => (
+                    <div key={dayIndex} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                      <h4 className="font-bold text-gray-900 mb-3 text-center border-b border-gray-100 pb-2">
+                        {day.day}
+                      </h4>
+                      <div className="space-y-2">
+                        {day.tasks.map((task: any, taskIndex: number) => (
+                          <div key={taskIndex} className="bg-gray-50 rounded-lg p-3">
+                            <h5 className="font-medium text-gray-900 text-sm mb-1">{task.title}</h5>
+                            <p className="text-gray-600 text-xs mb-2">{task.description}</p>
+                            <div className="flex items-center justify-between">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
+                              <div className="flex items-center text-gray-500 text-xs">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {task.estimatedDuration}m
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Weekly Summary */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-[#9650D4]">{dailyBreakdown.totalDuration} min</div>
+                      <div className="text-sm text-gray-600">Total Weekly Time</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-[#9650D4]">
+                        {Math.round(dailyBreakdown.totalDuration / 60)}h {dailyBreakdown.totalDuration % 60}m
+                      </div>
+                      <div className="text-sm text-gray-600">Daily Average</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-[#9650D4]">{dailyBreakdown.weeklyPlan.length}</div>
+                      <div className="text-sm text-gray-600">Active Days</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* AI Tips */}
+                {dailyBreakdown.tips && dailyBreakdown.tips.length > 0 && (
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      💡 AI Productivity Tips
+                    </h4>
+                    <ul className="space-y-2">
+                      {dailyBreakdown.tips.map((tip: string, tipIndex: number) => (
+                        <li key={tipIndex} className="text-gray-700 text-sm flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
