@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.database import connect_to_mongo, close_mongo_connection, seed_initial_data
-from app.api import goals, tasks, journals, ai, auth
+from app.api import goals, tasks, journals, ai, auth, users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -151,6 +151,7 @@ async def cors_debug_middleware(request, call_next):
 
 # Include routers
 app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 app.include_router(goals.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api") 
 app.include_router(journals.router, prefix="/api")

@@ -50,11 +50,13 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     theme: Optional[Theme] = None
+    has_completed_onboarding: Optional[bool] = None
 
 class User(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    has_completed_onboarding: bool = Field(default=False)
     
     class Config:
         populate_by_name = True
