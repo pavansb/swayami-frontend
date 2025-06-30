@@ -179,13 +179,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('🔄 MongoDB App: Initializing user from Supabase auth...');
       console.log('🔄 PROFILE PHOTO DEBUG: User metadata:', supabaseUser.user_metadata);
-      console.log('🔄 PROFILE PHOTO DEBUG: All user data:', {
-        id: supabaseUser.id,
-        email: supabaseUser.email,
-        user_metadata: supabaseUser.user_metadata,
-        app_metadata: supabaseUser.app_metadata,
-        identities: supabaseUser.identities
-      });
       
       // Extract profile photo from Google OAuth - check multiple possible fields
       const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
@@ -199,11 +192,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                        null;
       
       console.log('🔄 PROFILE PHOTO DEBUG: Extracted avatar URL:', avatarUrl);
-      console.log('🔄 PROFILE PHOTO DEBUG: Available metadata fields:', Object.keys(supabaseUser.user_metadata || {}));
-      console.log('🔄 PROFILE PHOTO DEBUG: Identities data:', supabaseUser.identities?.map(id => ({
-        provider: id.provider,
-        identity_data_keys: Object.keys(id.identity_data || {})
-      })));
       
       // First, try to find user in MongoDB
       let mongoUser = await apiService.getUserByEmail(supabaseUser.email || '');
@@ -218,13 +206,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                     supabaseUser.user_metadata?.name ||
                     supabaseUser.email?.split('@')[0] || 
                     'User',
-          avatar_url: avatarUrl
+          avatar_url: avatarUrl || undefined
         });
       } else if (avatarUrl && !mongoUser.avatar_url) {
         console.log('🔄 PROFILE PHOTO DEBUG: Updating existing user with avatar URL...');
         // Update existing user with avatar if they don't have one
-        await apiService.updateUserProfile(mongoUser._id, { avatar_url: avatarUrl });
-        mongoUser.avatar_url = avatarUrl;
+        const updatedUser = await apiService.updateUserProfile(mongoUser._id, { avatar_url: avatarUrl });
+        mongoUser = updatedUser;
       }
 
       if (mongoUser) {
@@ -416,10 +404,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       console.log('🎯 ONBOARDING DEBUG: Starting onboarding completion');
-      console.log('🎯 User ID:', user._id);
-      console.log('🎯 Selected goals:', selectedGoals);
-      console.log('🎯 Current goals state before:', goals);
-
+      
       // Create goals in MongoDB
       const createdGoals: Goal[] = [];
       for (const goalData of selectedGoals) {
@@ -442,27 +427,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('🎯 ONBOARDING DEBUG: All goals created:', createdGoals);
-      console.log('🎯 ONBOARDING DEBUG: Total goals created:', createdGoals.length);
 
       // Update user onboarding status
       console.log('🎯 ONBOARDING DEBUG: Updating user onboarding status...');
       await apiService.updateUserOnboarding(user._id, true);
 
       // Update local state
-      console.log('🎯 ONBOARDING DEBUG: Updating local state...');
-      console.log('🎯 ONBOARDING DEBUG: Goals being set:', createdGoals);
       setGoals(createdGoals);
       setUser(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
 
-      console.log('🎯 ONBOARDING DEBUG: State updates completed');
-      
-      // Verify goals were actually loaded by fetching them again
-      console.log('🎯 ONBOARDING DEBUG: Verifying goals in database...');
-      const fetchedGoals = await apiService.getUserGoals(user._id);
-      console.log('🎯 ONBOARDING DEBUG: Fetched goals from DB:', fetchedGoals);
-
       console.log('✅ MongoDB App: Onboarding completed successfully');
-      console.log('✅ Final goals state should be:', createdGoals);
       
       // Return the created goals for immediate use
       return createdGoals;
@@ -479,10 +453,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.log('📝 MongoDB App: Adding task:', task.title);
       const newTask = await apiService.createTask({
         user_id: user._id,
-        goal_id: task.goal_id || '',
         title: task.title,
         description: task.description,
-        priority: task.priority,
+        goal_id: task.goal_id,
+        priority: task.priority || 'medium',
         status: task.status
       });
 
@@ -504,10 +478,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
 
     try {
-      await apiService.updateTaskStatus(taskId, newStatus);
+      const updatedTask = await apiService.updateTaskStatus(taskId, newStatus);
       setTasks(prev => 
         prev.map(t => 
-          t._id === taskId ? { ...t, status: newStatus } : t
+          t._id === taskId ? { ...t, status: updatedTask.status as 'pending' | 'completed' | 'in_progress' } : t
         )
       );
     } catch (error) {
@@ -530,10 +504,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user?._id) return;
 
     try {
-      await apiService.updateTaskStatus(taskId, updates.status || 'pending');
+      const updatedTask = await apiService.updateTaskStatus(taskId, updates.status || 'pending');
       setTasks(prev => 
         prev.map(t => 
-          t._id === taskId ? { ...t, ...updates } : t
+          t._id === taskId ? { ...t, ...updates, status: updatedTask.status as 'pending' | 'completed' | 'in_progress' } : t
         )
       );
     } catch (error) {
@@ -604,10 +578,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       if (user?._id && avatarUrl) {
         // Update in MongoDB
-        await apiService.updateUserProfile(user._id, { avatar_url: avatarUrl });
+        const updatedUser = await apiService.updateUserProfile(user._id, { avatar_url: avatarUrl });
         
         // Update local state
-        setUser(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+        setUser(prev => prev ? { ...prev, avatar_url: updatedUser.avatar_url } : null);
         
         console.log('✅ REFRESH PROFILE: Profile photo updated successfully');
         return { success: true, error: null };

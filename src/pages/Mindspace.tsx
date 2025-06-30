@@ -238,7 +238,7 @@ const Mindspace = () => {
               <h4 className="font-semibold text-swayami-black mb-3">Recent Entries</h4>
               <div className="space-y-3">
                 {journalEntries.slice(-5).reverse().map((entry) => (
-                  <div key={entry.id} className="border-b border-swayami-border pb-3 last:border-b-0">
+                  <div key={entry._id} className="border-b border-swayami-border pb-3 last:border-b-0">
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-sm text-swayami-light-text">
                         {new Date(entry.created_at || '').toLocaleDateString()}
