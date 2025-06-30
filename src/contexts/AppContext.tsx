@@ -74,6 +74,7 @@ interface AppContextType {
   regenerateRecommendations: () => void;
   resetAllData: () => void;
   loadUserData: () => Promise<void>;
+  refreshUserProfile: () => Promise<{ success: boolean; error: any }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -178,13 +179,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('🔄 MongoDB App: Initializing user from Supabase auth...');
       console.log('🔄 PROFILE PHOTO DEBUG: User metadata:', supabaseUser.user_metadata);
+      console.log('🔄 PROFILE PHOTO DEBUG: All user data:', {
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        user_metadata: supabaseUser.user_metadata,
+        app_metadata: supabaseUser.app_metadata,
+        identities: supabaseUser.identities
+      });
       
-      // Extract profile photo from Google OAuth
+      // Extract profile photo from Google OAuth - check multiple possible fields
       const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
                        supabaseUser.user_metadata?.picture ||
+                       supabaseUser.user_metadata?.photo ||
+                       supabaseUser.user_metadata?.image ||
+                       supabaseUser.user_metadata?.profile_pic ||
+                       // Check identities array for Google provider data
+                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.picture ||
+                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.avatar_url ||
                        null;
       
       console.log('🔄 PROFILE PHOTO DEBUG: Extracted avatar URL:', avatarUrl);
+      console.log('🔄 PROFILE PHOTO DEBUG: Available metadata fields:', Object.keys(supabaseUser.user_metadata || {}));
+      console.log('🔄 PROFILE PHOTO DEBUG: Identities data:', supabaseUser.identities?.map(id => ({
+        provider: id.provider,
+        identity_data_keys: Object.keys(id.identity_data || {})
+      })));
       
       // First, try to find user in MongoDB
       let mongoUser = await mongoService.getUserByEmail(supabaseUser.email || '');
@@ -547,6 +566,46 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setJournalEntries([]);
   };
 
+  const refreshUserProfile = async () => {
+    try {
+      console.log('🔄 REFRESH PROFILE: Starting profile refresh...');
+      
+      if (!supabaseUser) {
+        console.log('❌ REFRESH PROFILE: No Supabase user found');
+        return { success: false, error: 'No authenticated user found' };
+      }
+
+      // Re-run the profile extraction logic
+      const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
+                       supabaseUser.user_metadata?.picture ||
+                       supabaseUser.user_metadata?.photo ||
+                       supabaseUser.user_metadata?.image ||
+                       supabaseUser.user_metadata?.profile_pic ||
+                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.picture ||
+                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.avatar_url ||
+                       null;
+
+      console.log('🔄 REFRESH PROFILE: Found avatar URL:', avatarUrl);
+
+      if (user?._id && avatarUrl) {
+        // Update in MongoDB
+        await mongoService.updateUserProfile(user._id, { avatar_url: avatarUrl });
+        
+        // Update local state
+        setUser(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+        
+        console.log('✅ REFRESH PROFILE: Profile photo updated successfully');
+        return { success: true, error: null };
+      } else {
+        console.log('❌ REFRESH PROFILE: No avatar URL found or no user ID');
+        return { success: false, error: 'No profile photo found in Google account' };
+      }
+    } catch (error) {
+      console.error('❌ REFRESH PROFILE: Error refreshing profile:', error);
+      return { success: false, error };
+    }
+  };
+
   const value: AppContextType = {
     user,
     supabaseUser,
@@ -571,6 +630,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     regenerateRecommendations,
     resetAllData,
     loadUserData,
+    refreshUserProfile,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

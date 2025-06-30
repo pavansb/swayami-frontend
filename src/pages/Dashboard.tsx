@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useApp } from '@/contexts/AppContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useApp } from '@/contexts/AppContext';
-import { Trash2, Edit, Plus, Sparkles, ChevronDown, ChevronRight, Archive, RefreshCw } from 'lucide-react';
+import { Check, Clock, ArrowRight, Filter, TrendingUp, Lightbulb, Plus, Calendar, Sparkles, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const Dashboard = () => {
   const { tasks, goals, habits, addTask, toggleTask, deleteTask, editTask, toggleHabit, regenerateRecommendations, journalEntries, user } = useApp();
   const [newTaskTitles, setNewTaskTitles] = useState<Record<string, string>>({});
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [goalsExpanded, setGoalsExpanded] = useState(false);
   const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
 
   const today = new Date().toISOString().split('T')[0];
   const todaysTasks = tasks; // All tasks for now since we don't have date filtering
@@ -83,79 +83,6 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="space-y-4 sm:space-y-6 max-w-full">
-        {/* My Goals Section */}
-        <Collapsible open={goalsExpanded} onOpenChange={setGoalsExpanded}>
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
-            <CollapsibleTrigger className="flex items-center justify-between w-full">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                My Goals
-              </h3>
-              {goalsExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent className="mt-4">
-              {goals.length === 0 ? (
-                <div className="text-center py-6 sm:py-8">
-                  <p className="text-gray-600 mb-4">
-                    No goals yet. Complete onboarding to set your goals.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/onboarding')}
-                    className="bg-[#9650D4] hover:bg-[#8547C4] px-6 py-2.5 rounded-xl font-semibold"
-                  >
-                    Set Your Goals
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {goals.map((goal) => {
-                    const goalTasks = tasks.filter(task => task.goal_id === goal._id);
-                    const completedGoalTasks = goalTasks.filter(task => task.status === 'completed');
-                    const progress = goalTasks.length > 0 ? (completedGoalTasks.length / goalTasks.length) * 100 : 0;
-                    
-                    return (
-                      <div key={goal._id} className="border border-gray-200 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 text-sm sm:text-base">{goal.title}</h4>
-                          <div className="flex space-x-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Archive className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-3">
-                          {goal.description || 'No description provided'}
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-[#9650D4] h-2 rounded-full transition-all duration-500"
-                              style={{ width: `${progress}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {Math.round(progress)}%
-                          </span>
-                        </div>
-                        <div className={`text-xs mt-2 px-2 py-1 rounded-full inline-block ${
-                          goal.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          goal.status === 'active' ? 'bg-blue-100 text-blue-800' : 
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {goal.status}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-
         {/* Tabbed Dashboard */}
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
           <Tabs defaultValue="plan" className="w-full">

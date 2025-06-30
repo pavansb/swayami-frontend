@@ -12,10 +12,10 @@ import { useTheme } from '@/components/ThemeProvider';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { mongoService } from '@/services/mongoService';
-import { Edit3, Save, X } from 'lucide-react';
+import { Edit3, Save, X, RefreshCw } from 'lucide-react';
 
 const Settings = () => {
-  const { user, setUser, resetAllData, logout } = useApp();
+  const { user, setUser, resetAllData, logout, refreshUserProfile } = useApp();
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -24,6 +24,8 @@ const Settings = () => {
   const [name, setName] = useState(user?.full_name || user?.name || '');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshingPhoto, setIsRefreshingPhoto] = useState(false);
+  const [avatarKey, setAvatarKey] = useState(Date.now()); // Cache busting key
 
   const displayName = user?.full_name || user?.name || user?.email || 'User';
   const initials = displayName
@@ -32,6 +34,9 @@ const Settings = () => {
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  // Create cache-busted avatar URL
+  const avatarUrlWithCacheBuster = user?.avatar_url ? `${user.avatar_url}&t=${avatarKey}` : null;
 
   const handleThemeToggle = (checked: boolean) => {
     toggleTheme();
@@ -99,6 +104,35 @@ const Settings = () => {
     }
   };
 
+  const handleRefreshPhoto = async () => {
+    setIsRefreshingPhoto(true);
+    try {
+      const result = await refreshUserProfile();
+      if (result.success) {
+        // Force avatar to refresh by updating cache-busting key
+        setAvatarKey(Date.now());
+        toast({
+          title: "Profile photo updated! ✅",
+          description: "Your Google profile picture has been synced successfully.",
+        });
+      } else {
+        toast({
+          title: "No profile photo found",
+          description: result.error || "Could not find a profile photo in your Google account.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh profile photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshingPhoto(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
@@ -111,18 +145,33 @@ const Settings = () => {
             
             {/* Profile Photo & Basic Info */}
             <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-              <Avatar className="w-20 h-20">
-                {user?.avatar_url && (
-                  <AvatarImage 
-                    src={user.avatar_url} 
-                    alt={displayName}
-                    className="object-cover"
-                  />
-                )}
-                <AvatarFallback className="bg-[#9650D4] text-white text-xl font-bold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="w-20 h-20">
+                  {avatarUrlWithCacheBuster && (
+                    <AvatarImage 
+                      src={avatarUrlWithCacheBuster} 
+                      alt={displayName}
+                      className="object-cover"
+                    />
+                  )}
+                  <AvatarFallback className="bg-[#9650D4] text-white text-xl font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  size="sm"
+                  onClick={handleRefreshPhoto}
+                  disabled={isRefreshingPhoto}
+                  className="absolute -bottom-2 -right-2 bg-[#9650D4] hover:bg-[#8547C4] text-white rounded-full w-8 h-8 p-0"
+                  title="Refresh profile photo from Google"
+                >
+                  {isRefreshingPhoto ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
               
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
@@ -279,33 +328,43 @@ const Settings = () => {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+          </div>
+
+          {/* Danger Zone Section */}
+          <div className="space-y-6 mb-8 border-t border-red-200 dark:border-red-700 pt-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+              <span className="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">DESTRUCTIVE ACTIONS</span>
+            </div>
             
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div>
-                <Label className="text-red-600 dark:text-red-400">Delete Account</Label>
-                <p className="text-sm text-swayami-light-text dark:text-gray-400">Permanently delete your account and all associated data</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-red-700 dark:text-red-400 font-semibold">Delete Account</Label>
+                  <p className="text-sm text-red-600 dark:text-red-300">Permanently delete your account and all associated data</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-red-600">⚠️ Delete Account Permanently?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action is irreversible. Your account, profile, goals, tasks, journal entries, and all progress will be permanently deleted. You will be logged out immediately.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
+                        Yes, Delete Forever
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
-                    Delete Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-red-600">⚠️ Delete Account Permanently?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action is irreversible. Your account, profile, goals, tasks, journal entries, and all progress will be permanently deleted. You will be logged out immediately.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
-                      Yes, Delete Forever
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </div>
           </div>
 

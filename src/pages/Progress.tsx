@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
-import { Calendar, Flame, Trophy, Target, Star, Zap, Award, TrendingUp } from 'lucide-react';
+import { Calendar, Flame, Trophy, Target, Star, Zap, Award, TrendingUp, CheckCircle2, Circle, Heart, DollarSign, Briefcase, GraduationCap, Home, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Achievement {
   id: string;
@@ -14,14 +16,161 @@ interface Achievement {
   target?: number;
 }
 
+interface DailyTask {
+  id: string;
+  title: string;
+  description: string;
+  goalCategory: string;
+  goalTitle: string;
+  completed: boolean;
+  estimatedDuration: string;
+  priority: 'high' | 'medium' | 'low';
+  day: string;
+}
+
 const Progress = () => {
-  const { tasks, user, journalEntries } = useApp();
+  const { tasks, user, journalEntries, goals } = useApp();
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+  const [dailyTasks, setDailyTasks] = useState<DailyTask[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string>('today');
+
+  // Mock daily breakdown tasks - in real app this would come from the AI breakdown
+  const mockDailyTasks: DailyTask[] = [
+    {
+      id: 'dt-1',
+      title: 'Morning 20-minute walk',
+      description: 'Start your day with a brisk walk around the neighborhood',
+      goalCategory: 'Health & Fitness',
+      goalTitle: 'Lose 15 pounds in 3 months',
+      completed: false,
+      estimatedDuration: '20 min',
+      priority: 'high',
+      day: 'today'
+    },
+    {
+      id: 'dt-2', 
+      title: 'Track daily calories in app',
+      description: 'Log all meals and snacks to stay within calorie goal',
+      goalCategory: 'Health & Fitness',
+      goalTitle: 'Lose 15 pounds in 3 months',
+      completed: true,
+      estimatedDuration: '10 min',
+      priority: 'high',
+      day: 'today'
+    },
+    {
+      id: 'dt-3',
+      title: 'Review weekly budget',
+      description: 'Check expenses vs budget and adjust spending plan',
+      goalCategory: 'Financial',
+      goalTitle: 'Save $5000 for emergency fund',
+      completed: false,
+      estimatedDuration: '15 min',
+      priority: 'medium',
+      day: 'today'
+    },
+    {
+      id: 'dt-4',
+      title: 'Transfer $100 to savings',
+      description: 'Weekly automated savings transfer',
+      goalCategory: 'Financial',
+      goalTitle: 'Save $5000 for emergency fund',
+      completed: false,
+      estimatedDuration: '5 min',
+      priority: 'high',
+      day: 'today'
+    },
+    {
+      id: 'dt-5',
+      title: 'Study JavaScript for 1 hour',
+      description: 'Continue with React components tutorial',
+      goalCategory: 'Career & Education',
+      goalTitle: 'Learn web development',
+      completed: false,
+      estimatedDuration: '60 min',
+      priority: 'medium',
+      day: 'today'
+    }
+  ];
+
+  useEffect(() => {
+    setDailyTasks(mockDailyTasks);
+  }, []);
+
+  const toggleDailyTask = (taskId: string) => {
+    setDailyTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'health & fitness':
+        return <Heart className="w-4 h-4" />;
+      case 'financial':
+        return <DollarSign className="w-4 h-4" />;
+      case 'career & education':
+        return <GraduationCap className="w-4 h-4" />;
+      case 'personal development':
+        return <User className="w-4 h-4" />;
+      case 'relationships':
+        return <Heart className="w-4 h-4" />;
+      case 'home & lifestyle':
+        return <Home className="w-4 h-4" />;
+      default:
+        return <Target className="w-4 h-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'health & fitness':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'financial':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'career & education':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'personal development':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'relationships':
+        return 'bg-pink-100 text-pink-800 border-pink-200';
+      case 'home & lifestyle':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Group daily tasks by category
+  const tasksByCategory = dailyTasks.reduce((acc, task) => {
+    if (!acc[task.goalCategory]) {
+      acc[task.goalCategory] = [];
+    }
+    acc[task.goalCategory].push(task);
+    return acc;
+  }, {} as Record<string, DailyTask[]>);
 
   const completedTasks = tasks.filter(task => task.status === 'completed');
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
   const currentStreak = user?.streak || 0;
+
+  // Calculate daily tasks completion
+  const completedDailyTasks = dailyTasks.filter(task => task.completed);
+  const dailyCompletionRate = dailyTasks.length > 0 ? (completedDailyTasks.length / dailyTasks.length) * 100 : 0;
 
   // Mock achievements system
   const achievements: Achievement[] = [
@@ -368,6 +517,109 @@ const Progress = () => {
               <div className="text-xs text-gray-600">Mood</div>
             </div>
           </div>
+        </div>
+
+        {/* Daily Action Steps */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <CheckCircle2 className="w-6 h-6 text-[#9650D4] mr-3" />
+              <h2 className="text-xl font-bold text-gray-900">Today's Action Steps</h2>
+            </div>
+            <div className="text-sm text-gray-600">
+              {completedDailyTasks.length}/{dailyTasks.length} completed ({Math.round(dailyCompletionRate)}%)
+            </div>
+          </div>
+
+          {/* Progress Bar for Daily Tasks */}
+          <div className="mb-6">
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-[#9650D4] to-[#C146C7] h-3 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${dailyCompletionRate}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Tasks organized by category */}
+          {Object.entries(tasksByCategory).map(([category, categoryTasks]) => (
+            <div key={category} className="mb-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="flex items-center space-x-2">
+                  {getCategoryIcon(category)}
+                  <h3 className="text-lg font-semibold text-gray-800">{category}</h3>
+                </div>
+                <Badge className={`text-xs ${getCategoryColor(category)}`}>
+                  {categoryTasks.filter(task => task.completed).length}/{categoryTasks.length} done
+                </Badge>
+              </div>
+              
+              <div className="space-y-3">
+                {categoryTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`p-4 rounded-xl border transition-all duration-300 hover:shadow-md ${
+                      task.completed
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-gray-200 bg-white hover:border-purple-200'
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        checked={task.completed}
+                        onCheckedChange={() => toggleDailyTask(task.id)}
+                        className="mt-1"
+                      />
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h4 className={`font-medium ${
+                            task.completed ? 'text-green-700 line-through' : 'text-gray-900'
+                          }`}>
+                            {task.title}
+                          </h4>
+                          <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </Badge>
+                        </div>
+                        
+                        <p className={`text-sm mb-2 ${
+                          task.completed ? 'text-green-600' : 'text-gray-600'
+                        }`}>
+                          {task.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">
+                            📋 {task.goalTitle}
+                          </span>
+                          <span className="text-gray-500">
+                            ⏱️ {task.estimatedDuration}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {dailyTasks.length === 0 && (
+            <div className="text-center py-8">
+              <CheckCircle2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Daily Tasks Yet</h3>
+              <p className="text-gray-500 mb-4">
+                Complete task generation to get AI-powered daily action steps for your goals.
+              </p>
+              <Button 
+                className="bg-[#9650D4] hover:bg-[#8547C4]"
+                onClick={() => window.location.href = '/task-generation'}
+              >
+                Generate Daily Tasks
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

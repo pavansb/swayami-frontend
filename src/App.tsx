@@ -8,6 +8,7 @@ import AuthCallback from "./pages/AuthCallback";
 import Onboarding from "./pages/Onboarding";
 import TaskGeneration from "./pages/TaskGeneration";
 import Dashboard from "./pages/Dashboard";
+import Goals from "./pages/Goals";
 import Mindspace from "./pages/Mindspace";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
@@ -38,6 +39,11 @@ const AppRoutes = () => (
       <Route path="/dashboard" element={
         <ProtectedRoute requiresOnboarding={true}>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/goals" element={
+        <ProtectedRoute requiresOnboarding={true}>
+          <Goals />
         </ProtectedRoute>
       } />
       <Route path="/mindspace" element={
