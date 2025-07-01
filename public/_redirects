@@ -1,0 +1,14 @@
+# Render Static Site Redirects Configuration
+# This fixes SPA routing issues where /auth/callback returns 404
+
+# Redirect all non-asset requests to index.html for React Router to handle
+# This is critical for OAuth callbacks and direct navigation to app routes
+
+# API requests should not be redirected (if any)
+/api/*  https://swayami-backend.onrender.com/api/:splat  200
+
+# Static assets should be served as-is (no redirect needed - Render handles this)
+# Images, JS, CSS, fonts, etc. are served directly
+
+# All other routes should serve index.html for React Router SPA routing
+/*    /index.html   200 
