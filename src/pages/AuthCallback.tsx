@@ -17,25 +17,60 @@ const AuthCallback = () => {
         // COMPREHENSIVE LOGGING - Step 1: Initial URL analysis
         const currentUrl = window.location.href;
         const currentOrigin = window.location.origin;
-        const isProduction = currentOrigin.includes('lovable.app');
+        const isProduction = currentOrigin.includes('onrender.com') || currentOrigin.includes('lovable.app');
         
         console.log('🔄 AUTH CALLBACK DEBUG - Step 1: Starting auth callback processing...');
         console.log('🔍 CRITICAL - Environment Detection:');
         console.log('🔍 Current URL:', currentUrl);
         console.log('🔍 Current origin:', currentOrigin);
         console.log('🔍 Is production/staging:', isProduction);
-        console.log('🔍 All URL params:', Object.fromEntries(searchParams.entries()));
+        console.log('🔍 Search params:', Object.fromEntries(searchParams.entries()));
+        
+        // CRITICAL FIX: Handle both hash fragments and search params
+        const urlHash = window.location.hash;
+        const hashParams = new URLSearchParams(urlHash.substring(1)); // Remove the '#'
+        
+        console.log('🔍 HASH DEBUG: URL hash:', urlHash);
+        console.log('🔍 HASH DEBUG: Hash params:', Object.fromEntries(hashParams.entries()));
+        
+        // Check for auth tokens in both locations
+        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+        const error = hashParams.get('error') || searchParams.get('error');
+        const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
+        
+        console.log('🔍 TOKEN DEBUG: Access token found:', !!accessToken);
+        console.log('🔍 TOKEN DEBUG: Refresh token found:', !!refreshToken);
+        console.log('🔍 TOKEN DEBUG: Error found:', error);
         
         setDebugInfo(prev => ({
           ...prev,
           currentUrl,
           currentOrigin,
           isProduction,
-          urlParams: Object.fromEntries(searchParams.entries())
+          hashParams: Object.fromEntries(hashParams.entries()),
+          searchParams: Object.fromEntries(searchParams.entries()),
+          tokensFound: { accessToken: !!accessToken, refreshToken: !!refreshToken }
         }));
+
+        // Handle OAuth errors first
+        if (error) {
+          console.error('❌ AUTH CALLBACK ERROR: OAuth error from URL:', error, errorDescription);
+          setStatus('error');
+          setMessage(`Authentication failed: ${errorDescription || error}`);
+          setTimeout(() => navigate('/login'), 3000);
+          return;
+        }
 
         // COMPREHENSIVE LOGGING - Step 2: Supabase session handling
         console.log('🔄 AUTH CALLBACK DEBUG - Step 2: Getting Supabase session...');
+        
+        // If we have tokens in the URL, let Supabase handle the session from URL
+        if (accessToken) {
+          console.log('✅ AUTH CALLBACK: Found access token in URL, letting Supabase handle session establishment...');
+          // Give Supabase a moment to process the hash fragment
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
@@ -60,24 +95,37 @@ const AuthCallback = () => {
 
         const session = sessionData?.session;
         if (!session || !session.user) {
-          console.log('⚠️ AUTH CALLBACK: No session found, checking URL parameters...');
+          console.log('⚠️ AUTH CALLBACK: No session found yet...');
           
-          // Check URL parameters for auth information
-          const error = searchParams.get('error');
-          const errorDescription = searchParams.get('error_description');
-          
-          if (error) {
-            console.error('❌ AUTH CALLBACK ERROR: OAuth error from URL:', error, errorDescription);
-            setStatus('error');
-            setMessage(`Authentication failed: ${errorDescription || error}`);
-            setTimeout(() => navigate('/login'), 2000);
-            return;
+          // If we have tokens but no session yet, wait a bit longer for Supabase to process
+          if (accessToken) {
+            console.log('🔄 AUTH CALLBACK: Have tokens but no session yet, waiting longer...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Try getting session again
+            const { data: retrySessionData } = await supabase.auth.getSession();
+            if (retrySessionData?.session?.user) {
+              console.log('✅ AUTH CALLBACK: Session found on retry!');
+              // Continue with the session
+              const finalUser = retrySessionData.session.user;
+              setStatus('success');
+              setMessage('Authentication successful! Redirecting...');
+              
+              setTimeout(() => {
+                if (user?.hasCompletedOnboarding) {
+                  navigate('/dashboard');
+                } else {
+                  navigate('/onboarding');
+                }
+              }, 1500);
+              return;
+            }
           }
           
-          console.error('❌ AUTH CALLBACK ERROR: No valid session or auth data');
+          console.error('❌ AUTH CALLBACK ERROR: No valid session or auth data after retries');
           setStatus('error');
           setMessage('Authentication failed - no valid session found');
-          setTimeout(() => navigate('/login'), 2000);
+          setTimeout(() => navigate('/login'), 3000);
           return;
         }
 
@@ -181,11 +229,11 @@ const AuthCallback = () => {
           </div>
         )}
 
-        {/* Debug information for development */}
-        {process.env.NODE_ENV === 'development' && Object.keys(debugInfo).length > 0 && (
+        {/* Debug information for staging/development */}
+        {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('onrender.com')) && Object.keys(debugInfo).length > 0 && (
           <details className="mt-4 text-left">
-            <summary className="text-sm cursor-pointer text-gray-500">Debug Info</summary>
-            <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-auto">
+            <summary className="text-sm cursor-pointer text-gray-500">Debug Info (Staging)</summary>
+            <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
           </details>
