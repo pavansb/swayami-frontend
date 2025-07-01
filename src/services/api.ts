@@ -84,10 +84,12 @@ class ApiService {
     
     // STEP 1: Check if backend is in development mode (localhost)
     const isBackendDevelopment = this.baseURL.includes('localhost') || this.baseURL.includes('127.0.0.1');
+    const isBackendStaging = this.baseURL.includes('onrender.com');
     console.log('🔍 AUTH DEBUG: Backend development mode:', isBackendDevelopment);
+    console.log('🔍 AUTH DEBUG: Backend staging mode:', isBackendStaging);
     
-    if (isBackendDevelopment) {
-      console.log('🛠️ AUTH DEBUG: Using mock authentication for backend development');
+    if (isBackendDevelopment || isBackendStaging) {
+      console.log('🛠️ AUTH DEBUG: Using mock authentication for backend');
       
       // Create mock token that backend expects
       // Backend expects base64 encoded "user_id:email" format
@@ -96,7 +98,7 @@ class ApiService {
       const mockTokenData = `${mockUserId}:${mockEmail}`;
       const mockToken = btoa(mockTokenData); // Base64 encode
       
-      console.log('✅ AUTH DEBUG: Created mock token for backend development');
+      console.log('✅ AUTH DEBUG: Created mock token for backend');
       console.log('🔐 AUTH DEBUG: Mock token preview:', mockToken.substring(0, 20) + '...');
       
       return {
@@ -105,14 +107,10 @@ class ApiService {
       };
     }
     
-    // STEP 2: For production/staging, use Supabase JWT tokens
-    console.log('🔍 AUTH DEBUG: Using Supabase JWT for production/staging');
+    // STEP 2: For production (future), use Supabase JWT tokens
+    console.log('🔍 AUTH DEBUG: Using Supabase JWT for production');
     
-    // Check localStorage token (legacy approach)
-    const localStorageToken = localStorage.getItem('swayami_token');
-    console.log('🔍 AUTH DEBUG: localStorage swayami_token:', localStorageToken ? '✅ EXISTS' : '❌ NOT FOUND');
-    
-    // Get Supabase session token (correct approach for production)
+    // Get Supabase session token (for future production use)
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
       
@@ -143,16 +141,6 @@ class ApiService {
       
     } catch (error: any) {
       console.error('❌ AUTH DEBUG: Error getting Supabase session:', error);
-      
-      // Fallback to localStorage token if available
-      if (localStorageToken) {
-        console.log('🔄 AUTH DEBUG: Falling back to localStorage token');
-        return {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorageToken}`
-        };
-      }
-      
       return { 'Content-Type': 'application/json' };
     }
   }
