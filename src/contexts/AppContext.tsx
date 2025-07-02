@@ -58,6 +58,7 @@ interface AppContextType {
   journalEntries: JournalEntry[];
   habits: Array<{ _id: string; emoji: string; label: string; completed: boolean }>;
   isLoading: boolean;
+  serviceError: string | null;
   login: (email: string) => void;
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
@@ -75,6 +76,7 @@ interface AppContextType {
   resetAllData: () => void;
   loadUserData: () => Promise<void>;
   refreshUserProfile: () => Promise<{ success: boolean; error: any }>;
+  retryUserInitialization: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,6 +103,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     { _id: '5', emoji: '🌱', label: 'Practice gratitude', completed: true },
   ]);
   const [isLoading, setIsLoading] = useState(true);
+  const [serviceError, setServiceError] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -223,28 +226,62 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         });
         
         console.log('✅ PRODUCTION USER INIT: New user created successfully:', mongoUser?.email, 'ID:', mongoUser?._id);
-      } catch (createUserError) {
-        console.error('🚨 PRODUCTION USER INIT: CRITICAL - User creation failed!', createUserError);
-        console.error('🚨 PRODUCTION USER INIT: This is the root cause of login redirect issue!');
-        
-        // FALLBACK: Set user state anyway to prevent login redirect
-        console.log('🛡️ PRODUCTION USER INIT: Using FALLBACK - setting user state from Supabase data');
-        setUser({
-          _id: supabaseUser.id, // Use Supabase ID as fallback
-          email: supabaseUser.email || '',
-          full_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
-          name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
-          avatar_url: avatarUrl,
-          isLoggedIn: true, // ❗ CRITICAL: Always set this to true
-          hasCompletedOnboarding: false, // New user needs onboarding
-          streak: 0,
-          level: 'Mindful Novice',
-          google_id: supabaseUser.id
-        });
-        
-        console.log('✅ PRODUCTION USER INIT: Fallback user state set - user should proceed to onboarding');
-        return; // Exit early with fallback state
-      }
+             } catch (createUserError) {
+         console.error('🚨 PRODUCTION USER INIT: CRITICAL - User creation failed!', createUserError);
+         console.error('🚨 PRODUCTION USER INIT: This is the root cause of login redirect issue!');
+         
+         // RETRY MECHANISM: Try to create user again with retry logic
+         console.log('🔄 PRODUCTION USER INIT: Attempting retry...');
+         
+         for (let retryCount = 1; retryCount <= 3; retryCount++) {
+           console.log(`🔄 PRODUCTION USER INIT: Retry attempt ${retryCount}/3`);
+           
+           try {
+             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Progressive delay
+             
+             mongoUser = await apiService.createUser({
+               google_id: supabaseUser.id,
+               email: supabaseUser.email || '',
+               full_name: supabaseUser.user_metadata?.full_name || 
+                         supabaseUser.user_metadata?.name ||
+                         supabaseUser.email?.split('@')[0] || 
+                         'User',
+               avatar_url: avatarUrl || undefined
+             });
+             
+             console.log(`✅ PRODUCTION USER INIT: User creation succeeded on retry ${retryCount}!`);
+             break; // Success - exit retry loop
+             
+           } catch (retryError) {
+             console.error(`❌ PRODUCTION USER INIT: Retry ${retryCount} failed:`, retryError);
+             
+             if (retryCount === 3) {
+               // All retries failed - show user a proper error
+               console.error('🚨 PRODUCTION USER INIT: All retries failed - MongoDB appears to be down');
+               console.error('🚨 PRODUCTION USER INIT: Setting temporary user state and showing error message');
+               
+               // Set minimal user state to prevent login redirect, but show error
+               setUser({
+                 _id: 'TEMP_' + supabaseUser.id, // Temporary ID that won't work with backend
+                 email: supabaseUser.email || '',
+                 full_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+                 name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+                 avatar_url: avatarUrl,
+                 isLoggedIn: true,
+                 hasCompletedOnboarding: false,
+                 streak: 0,
+                 level: 'Mindful Novice',
+                 google_id: supabaseUser.id
+               });
+               
+                               // Set service error state for UI to show error message
+                setServiceError('Our service is temporarily unavailable. Please try again in a few minutes.');
+                console.log('💡 PRODUCTION USER INIT: Service error set - UI should show error message');
+                return;
+             }
+           }
+         }
+       }
     }
     
     // Step 3: Update existing user with avatar if needed
@@ -654,6 +691,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const retryUserInitialization = async () => {
+    if (supabaseUser) {
+      setServiceError(null);
+      await initializeUserFromSupabase(supabaseUser);
+    }
+  };
+
   const value: AppContextType = {
     user,
     supabaseUser,
@@ -662,6 +706,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     journalEntries,
     habits,
     isLoading,
+    serviceError,
     login,
     loginWithToken,
     logout,
@@ -679,6 +724,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     resetAllData,
     loadUserData,
     refreshUserProfile,
+    retryUserInitialization,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
