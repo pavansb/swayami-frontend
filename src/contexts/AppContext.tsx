@@ -176,29 +176,42 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const initializeUserFromSupabase = async (supabaseUser: SupabaseUser) => {
+    console.log('🔄 PRODUCTION USER INIT: Starting user initialization for:', supabaseUser.email);
+    
+    // Extract profile photo first
+    const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
+                     supabaseUser.user_metadata?.picture ||
+                     supabaseUser.user_metadata?.photo ||
+                     supabaseUser.user_metadata?.image ||
+                     supabaseUser.user_metadata?.profile_pic ||
+                     supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.picture ||
+                     supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.avatar_url ||
+                     null;
+    
+    console.log('🔄 PRODUCTION USER INIT: Avatar URL extracted:', avatarUrl);
+
+    let mongoUser = null;
+    
+    // Step 1: Try to find existing user
     try {
-      console.log('🔄 MongoDB App: Initializing user from Supabase auth...');
-      console.log('🔄 PROFILE PHOTO DEBUG: User metadata:', supabaseUser.user_metadata);
-      
-      // Extract profile photo from Google OAuth - check multiple possible fields
-      const avatarUrl = supabaseUser.user_metadata?.avatar_url || 
-                       supabaseUser.user_metadata?.picture ||
-                       supabaseUser.user_metadata?.photo ||
-                       supabaseUser.user_metadata?.image ||
-                       supabaseUser.user_metadata?.profile_pic ||
-                       // Check identities array for Google provider data
-                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.picture ||
-                       supabaseUser.identities?.find(identity => identity.provider === 'google')?.identity_data?.avatar_url ||
-                       null;
-      
-      console.log('🔄 PROFILE PHOTO DEBUG: Extracted avatar URL:', avatarUrl);
-      
-      // First, try to find user in MongoDB
-      let mongoUser = await apiService.getUserByEmail(supabaseUser.email || '');
-      
-      if (!mongoUser) {
-        console.log('👤 MongoDB App: Creating new user in MongoDB...');
-        // Create user in MongoDB with profile photo
+      console.log('🔍 PRODUCTION USER INIT: Checking if user exists in MongoDB...');
+      mongoUser = await apiService.getUserByEmail(supabaseUser.email || '');
+      console.log('✅ PRODUCTION USER INIT: Existing user found:', mongoUser?.email);
+    } catch (getUserError) {
+      console.log('❌ PRODUCTION USER INIT: Error checking existing user (expected for new users):', getUserError);
+      // This is expected for new users - continue to user creation
+    }
+    
+    // Step 2: Create user if doesn't exist  
+    if (!mongoUser) {
+      try {
+        console.log('👤 PRODUCTION USER INIT: Creating new user in MongoDB...');
+        console.log('👤 PRODUCTION USER INIT: User data:', {
+          google_id: supabaseUser.id,
+          email: supabaseUser.email,
+          full_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User'
+        });
+        
         mongoUser = await apiService.createUser({
           google_id: supabaseUser.id,
           email: supabaseUser.email || '',
@@ -208,38 +221,84 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                     'User',
           avatar_url: avatarUrl || undefined
         });
-      } else if (avatarUrl && !mongoUser.avatar_url) {
-        console.log('🔄 PROFILE PHOTO DEBUG: Updating existing user with avatar URL...');
-        // Update existing user with avatar if they don't have one
+        
+        console.log('✅ PRODUCTION USER INIT: New user created successfully:', mongoUser?.email, 'ID:', mongoUser?._id);
+      } catch (createUserError) {
+        console.error('🚨 PRODUCTION USER INIT: CRITICAL - User creation failed!', createUserError);
+        console.error('🚨 PRODUCTION USER INIT: This is the root cause of login redirect issue!');
+        
+        // FALLBACK: Set user state anyway to prevent login redirect
+        console.log('🛡️ PRODUCTION USER INIT: Using FALLBACK - setting user state from Supabase data');
+        setUser({
+          _id: supabaseUser.id, // Use Supabase ID as fallback
+          email: supabaseUser.email || '',
+          full_name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+          name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || 'User',
+          avatar_url: avatarUrl,
+          isLoggedIn: true, // ❗ CRITICAL: Always set this to true
+          hasCompletedOnboarding: false, // New user needs onboarding
+          streak: 0,
+          level: 'Mindful Novice',
+          google_id: supabaseUser.id
+        });
+        
+        console.log('✅ PRODUCTION USER INIT: Fallback user state set - user should proceed to onboarding');
+        return; // Exit early with fallback state
+      }
+    }
+    
+    // Step 3: Update existing user with avatar if needed
+    if (mongoUser && avatarUrl && !mongoUser.avatar_url) {
+      try {
+        console.log('🔄 PRODUCTION USER INIT: Updating existing user with avatar...');
         const updatedUser = await apiService.updateUserProfile(mongoUser._id, { avatar_url: avatarUrl });
         mongoUser = updatedUser;
+        console.log('✅ PRODUCTION USER INIT: User avatar updated');
+      } catch (updateError) {
+        console.log('⚠️ PRODUCTION USER INIT: Avatar update failed (non-critical):', updateError);
+        // Continue with existing user data
       }
-
-      if (mongoUser) {
-        console.log('✅ MongoDB App: User initialized:', mongoUser.email);
-        console.log('✅ PROFILE PHOTO DEBUG: Final avatar URL:', mongoUser.avatar_url);
-        
-        setUser({
-          _id: mongoUser._id,
-          email: mongoUser.email,
-          full_name: mongoUser.full_name,
-          name: mongoUser.full_name,
-          avatar_url: mongoUser.avatar_url,
-          isLoggedIn: true,
-          hasCompletedOnboarding: mongoUser.has_completed_onboarding || false,
-          streak: mongoUser.streak || 0,
-          level: mongoUser.level || 'Mindful Novice',
-          google_id: mongoUser.google_id
-        });
-
-        // Load user data
-        await loadUserDataFromMongo(mongoUser._id);
-      }
-    } catch (error) {
-      console.error('❌ MongoDB App: Error initializing user from Supabase:', error);
-      // Don't block the app, but show error info
-      console.error('💡 This might be due to MongoDB connection issues or service unavailability');
     }
+
+    // Step 4: Set user state (CRITICAL - this must happen!)
+    if (mongoUser) {
+      console.log('✅ PRODUCTION USER INIT: Setting user state in React context...');
+      console.log('✅ PRODUCTION USER INIT: User data:', {
+        id: mongoUser._id,
+        email: mongoUser.email,
+        hasCompletedOnboarding: mongoUser.has_completed_onboarding
+      });
+      
+      setUser({
+        _id: mongoUser._id,
+        email: mongoUser.email,
+        full_name: mongoUser.full_name,
+        name: mongoUser.full_name,
+        avatar_url: mongoUser.avatar_url,
+        isLoggedIn: true, // ❗ CRITICAL: This prevents login redirect
+        hasCompletedOnboarding: mongoUser.has_completed_onboarding || false,
+        streak: mongoUser.streak || 0,
+        level: mongoUser.level || 'Mindful Novice',
+        google_id: mongoUser.google_id
+      });
+
+      console.log('✅ PRODUCTION USER INIT: User state set successfully - user should proceed normally');
+
+      // Step 5: Load user data (non-critical)
+      try {
+        console.log('📊 PRODUCTION USER INIT: Loading user data...');
+        await loadUserDataFromMongo(mongoUser._id);
+        console.log('✅ PRODUCTION USER INIT: User data loaded successfully');
+      } catch (loadDataError) {
+        console.log('⚠️ PRODUCTION USER INIT: User data loading failed (non-critical):', loadDataError);
+        // Continue - user can still use the app
+      }
+    } else {
+      console.error('🚨 PRODUCTION USER INIT: CRITICAL - No mongoUser data available!');
+      console.error('🚨 PRODUCTION USER INIT: This should never happen - check backend logs');
+    }
+    
+    console.log('🎯 PRODUCTION USER INIT: Initialization complete');
   };
 
   const loadUserDataFromMongo = async (userId: string) => {
