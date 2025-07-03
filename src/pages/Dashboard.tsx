@@ -235,7 +235,7 @@ const Dashboard = () => {
           <Tabs defaultValue="plan" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 h-12">
               <TabsTrigger value="plan" className="text-xs sm:text-sm font-semibold">PLAN</TabsTrigger>
-              <TabsTrigger value="progress" className="text-xs sm:text-sm font-semibold">JOURNEY</TabsTrigger>
+              <TabsTrigger value="progress" className="text-xs sm:text-sm font-semibold">PROGRESS</TabsTrigger>
               <TabsTrigger value="reflect" className="text-xs sm:text-sm font-semibold">REFLECT</TabsTrigger>
             </TabsList>
 
@@ -460,14 +460,14 @@ const Dashboard = () => {
               ))}
             </TabsContent>
 
-            {/* JOURNEY Tab */}
+            {/* PROGRESS Tab */}
             <TabsContent value="progress" className="space-y-4 sm:space-y-6">
               <div className="text-center mb-4 sm:mb-6">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                  Track Your Growth Journey
+                  Track What You're Becoming
                 </h2>
                 <p className="text-sm sm:text-base text-gray-600">
-                  Every step forward is part of your unique path
+                  Every step forward counts
                 </p>
               </div>
 
