@@ -343,7 +343,7 @@ const Progress = () => {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Your Progress Journey
+            Your Growth Journey
           </h1>
           <p className="text-gray-600">
             Every step forward is a victory worth celebrating

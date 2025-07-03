@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -11,7 +10,7 @@ const MobileMenu = () => {
   const navigation = [
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Mindspace', path: '/mindspace' },
-    { name: 'Progress', path: '/progress' },
+    { name: 'Journey', path: '/progress' },
     { name: 'Settings', path: '/settings' },
   ];
 

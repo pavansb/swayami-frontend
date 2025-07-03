@@ -13,7 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navigation = [
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Goals', path: '/goals' },
-    { name: 'Progress', path: '/progress' },
+    { name: 'Journey', path: '/progress' },
     { name: 'Mindspace', path: '/mindspace' },
     { name: 'Settings', path: '/settings' },
   ];
