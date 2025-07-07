@@ -30,6 +30,10 @@ interface GoalWithTasks {
   selectedTasks: boolean[];
 }
 
+// Define types for dailyBreakdown and day if not already defined
+// type DailyBreakdownType = { weeklyPlan: DayPlanType[]; ... };
+// type DayPlanType = { tasks: TaskSuggestion[]; ... };
+
 const TaskGeneration = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,7 +47,7 @@ const TaskGeneration = () => {
   // Daily breakdown feature states
   const [showDailyBreakdownPrompt, setShowDailyBreakdownPrompt] = useState(false);
   const [isGeneratingDailyBreakdown, setIsGeneratingDailyBreakdown] = useState(false);
-  const [dailyBreakdown, setDailyBreakdown] = useState<any>(null);
+  const [dailyBreakdown, setDailyBreakdown] = useState<null | DailyBreakdownType>(null);
   const [showDailyBreakdown, setShowDailyBreakdown] = useState(false);
 
   // Get goals from location state (passed from onboarding) or from context
@@ -69,7 +73,7 @@ const TaskGeneration = () => {
         );
 
         // Type-safe conversion of backend response
-        const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: any) => ({
+        const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: TaskSuggestion) => ({
           title: task.title,
           description: task.description,
           priority: (task.priority as 'low' | 'medium' | 'high') || 'medium',
@@ -128,7 +132,7 @@ const TaskGeneration = () => {
       );
 
       // Type-safe conversion of backend response
-      const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: any) => ({
+      const typedTasks: TaskSuggestion[] = (response.tasks || []).map((task: TaskSuggestion) => ({
         title: task.title,
         description: task.description,
         priority: (task.priority as 'low' | 'medium' | 'high') || 'medium',
@@ -580,13 +584,13 @@ const TaskGeneration = () => {
               {/* Weekly Schedule */}
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 mb-6">
-                  {dailyBreakdown.weeklyPlan.map((day: any, dayIndex: number) => (
+                  {dailyBreakdown.weeklyPlan.map((day: DayPlanType, dayIndex: number) => (
                     <div key={dayIndex} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
                       <h4 className="font-bold text-gray-900 mb-3 text-center border-b border-gray-100 pb-2">
                         {day.day}
                       </h4>
                       <div className="space-y-2">
-                        {day.tasks.map((task: any, taskIndex: number) => (
+                        {day.tasks.map((task: TaskSuggestion, taskIndex: number) => (
                           <div key={taskIndex} className="bg-gray-50 rounded-lg p-3">
                             <h5 className="font-medium text-gray-900 text-sm mb-1">{task.title}</h5>
                             <p className="text-gray-600 text-xs mb-2">{task.description}</p>

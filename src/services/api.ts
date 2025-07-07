@@ -139,7 +139,7 @@ class ApiService {
         return { 'Content-Type': 'application/json' };
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ AUTH DEBUG: Error getting Supabase session:', error);
       return { 'Content-Type': 'application/json' };
     }
@@ -177,10 +177,10 @@ class ApiService {
       console.log(`✅ BACKEND AVAILABILITY CHECK: ${this.isBackendAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}`);
       
       return this.isBackendAvailable;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ BACKEND AVAILABILITY CHECK FAILED:', {
-        error: error.message,
-        name: error.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'UnknownError',
         baseURL: this.baseURL
       });
       
@@ -226,11 +226,11 @@ class ApiService {
       console.log(`✅ API SUCCESS: ${options.method || 'GET'} ${url}`);
       return data;
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ API ERROR: ${options.method || 'GET'} ${url}`, {
-        error: error.message,
-        name: error.name,
-        status: error.status
+        error: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'UnknownError',
+        status: error instanceof Error ? error.status : 'UnknownStatus'
       });
 
       // Enhanced error handling for staging
@@ -238,7 +238,7 @@ class ApiService {
         console.warn('🔄 STAGING ERROR DETECTED - Attempting fallback...');
         
         // DNS resolution errors
-        if (error.message?.includes('ERR_NAME_NOT_RESOLVED')) {
+        if (error instanceof Error && error.message?.includes('ERR_NAME_NOT_RESOLVED')) {
           console.error('❌ DNS RESOLUTION FAILED:', {
             baseURL: this.baseURL,
             suggestion: 'Backend domain does not exist or is not accessible'
@@ -246,7 +246,7 @@ class ApiService {
         }
         
         // Network errors
-        if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        if (error instanceof Error && (error.message?.includes('Failed to fetch') || error.name === 'TypeError')) {
           console.error('❌ NETWORK ERROR DETECTED:', {
             baseURL: this.baseURL,
             environment: config.ENVIRONMENT,
@@ -387,7 +387,7 @@ class ApiService {
     });
   }
 
-  async generateDailyBreakdown(tasks: any[], goalTitle: string, goalDescription: string, timeframe: string = '7 days') {
+  async generateDailyBreakdown(tasks: object[], goalTitle: string, goalDescription: string, timeframe: string = '7 days') {
     console.log('📅 GENERATING DAILY BREAKDOWN VIA BACKEND:', { tasks, goalTitle, timeframe });
     
     return this.makeRequestWithFallback(`${this.baseURL}/api/ai/generate-daily-breakdown`, {
@@ -592,9 +592,9 @@ class ApiService {
         console.warn('⚠️  CORS TEST FAILED:', response.status, response.statusText);
         return { error: `HTTP ${response.status}`, status: response.status };
       }
-    } catch (error: any) {
-      console.error('❌ CORS TEST ERROR:', error.message);
-      return { error: error.message, type: error.name };
+    } catch (error: unknown) {
+      console.error('❌ CORS TEST ERROR:', error instanceof Error ? error.message : 'Unknown error');
+      return { error: error instanceof Error ? error.message : 'Unknown error', type: error instanceof Error ? error.name : 'UnknownError' };
     }
   }
 }

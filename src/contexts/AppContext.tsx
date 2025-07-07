@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { supabase } from '../integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { apiService } from '../services/api';
 
@@ -62,7 +62,7 @@ interface AppContextType {
   login: (email: string) => void;
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
-  signInWithGoogle: () => Promise<{ success: boolean; error: any }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error: unknown }>;
   setUser: (user: User | null | ((prev: User | null) => User | null)) => void;
   completeOnboarding: (selectedGoals: { type: string; description: string }[]) => Promise<Goal[]>;
   addTask: (task: Omit<Task, '_id' | 'created_at'>) => Promise<void>;
@@ -75,7 +75,7 @@ interface AppContextType {
   regenerateRecommendations: () => void;
   resetAllData: () => void;
   loadUserData: () => Promise<void>;
-  refreshUserProfile: () => Promise<{ success: boolean; error: any }>;
+  refreshUserProfile: () => Promise<{ success: boolean; error: unknown }>;
   retryUserInitialization: () => Promise<void>;
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/utils/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { useApp } from '@/contexts/AppContext';
 
 const AuthCallback = () => {
@@ -9,7 +9,7 @@ const AuthCallback = () => {
   const { user } = useApp();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing authentication...');
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -165,11 +165,11 @@ const AuthCallback = () => {
           }
         }, 1500);
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ AUTH CALLBACK CRITICAL ERROR:', error);
         setStatus('error');
-        setMessage(`Authentication error: ${error.message}`);
-        setDebugInfo(prev => ({ ...prev, criticalError: error.message }));
+        setMessage(`Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setDebugInfo(prev => ({ ...prev, criticalError: error instanceof Error ? error.message : 'Unknown error' }));
         
         setTimeout(() => {
           console.log('🔄 Redirecting to login due to critical error...');
