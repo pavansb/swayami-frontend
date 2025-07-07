@@ -67,7 +67,7 @@ export default function LandingPage() {
   return (
     <div className="bg-[#F4F8FB] min-h-screen w-full font-['Inter','Lexend_Deca',sans-serif] text-[#1A2A36]">
       <header className="flex items-center justify-between px-6 md:px-16 py-6 bg-white/80 backdrop-blur-md sticky top-0 z-30">
-        <div className="text-2xl font-extrabold tracking-tight text-[#28A745]">Swayami</div>
+        <img src="/lovable-uploads/Logo.png" alt="Swayami Logo" className="h-14 w-auto" />
         <nav className="hidden md:flex gap-8 text-[#4A5568] font-medium">
           <a href="#" className="hover:text-[#28A745]">Home</a>
           <a href="#how" className="hover:text-[#28A745]">How It Works</a>
@@ -79,8 +79,8 @@ export default function LandingPage() {
       </header>
       <section className="flex flex-col md:flex-row items-center justify-between px-6 md:px-16 pt-16 pb-10 gap-12 md:gap-0">
         <div className="max-w-xl space-y-7 animate-fadein-up">
-          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">Achieve More, Effortlessly.</h1>
-          <p className="text-lg text-[#4A5568]">Calm productivity meets AI. Swayami helps you build habits, manage tasks, and reach your goals, without the overwhelm.</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">Your Mind, Upgraded.</h1>
+          <p className="text-lg text-[#4A5568]">Swayami combines habit psychology and intelligent automation to help you win every day, with peace of mind.</p>
           <div className="flex gap-4 mt-6">
             <button className="bg-[#28A745] text-white px-7 py-3 rounded-full font-semibold text-base hover:bg-[#219150] transition">Start Building Habits</button>
             <button className="bg-white border border-[#28A745] text-[#28A745] px-7 py-3 rounded-full font-semibold text-base hover:bg-[#E6F4EA] transition">Learn More</button>
