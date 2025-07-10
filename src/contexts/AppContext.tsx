@@ -408,7 +408,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const currentOrigin = window.location.origin;
       const currentPort = window.location.port;
       const currentHostname = window.location.hostname;
-      const isProduction = currentOrigin.includes('lovable.app');
+      const isProduction = currentOrigin.includes('app.swayami.com');
       const expectedRedirectUrl = `${currentOrigin}/auth/callback`;
       
       console.log('🔄 STAGING/PRODUCTION SIGN-IN DEBUG - Step 1: Initiating Google OAuth...');

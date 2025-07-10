@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 const Index = () => {
   useEffect(() => {
-    // Redirect to the external static landing page
-    window.location.href = 'https://swayami-spark-bliss.lovable.app';
+    // Redirect to the main landing page
+    window.location.href = 'https://swayami.com';
   }, []);
 
   // Show a brief loading message while redirecting

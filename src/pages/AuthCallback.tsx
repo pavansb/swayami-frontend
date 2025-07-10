@@ -17,7 +17,7 @@ const AuthCallback = () => {
         // COMPREHENSIVE LOGGING - Step 1: Initial URL analysis
         const currentUrl = window.location.href;
         const currentOrigin = window.location.origin;
-        const isProduction = currentOrigin.includes('onrender.com') || currentOrigin.includes('lovable.app');
+        const isProduction = currentOrigin.includes('app.swayami.com');
         
         console.log('🔄 AUTH CALLBACK DEBUG - Step 1: Starting auth callback processing...');
         console.log('🔍 CRITICAL - Environment Detection:');
@@ -230,7 +230,7 @@ const AuthCallback = () => {
         )}
 
         {/* Debug information for staging/development */}
-        {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('onrender.com')) && Object.keys(debugInfo).length > 0 && (
+        {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('onrender.com') || window.location.hostname.includes('app.swayami.com')) && Object.keys(debugInfo).length > 0 && (
           <details className="mt-4 text-left">
             <summary className="text-sm cursor-pointer text-gray-500">Debug Info (Staging)</summary>
             <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-auto max-h-40">

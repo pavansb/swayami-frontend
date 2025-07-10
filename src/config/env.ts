@@ -47,7 +47,7 @@ const getConfig = (): Config => {
   // Check if we're in Lovable QA/staging environment  
   const isLovableQA = hostname === 'swayami-focus-mirror.lovable.app';
   
-  // Check if we're in production environment
+  // Check if we're in production environment (new domain structure)
   const isProd = hostname === 'app.swayami.com';
 
   console.log('🔧 ENVIRONMENT FLAGS:', { isDev, isRenderStaging, isLovableQA, isProd });
@@ -79,7 +79,7 @@ const getConfig = (): Config => {
     return config;
   } else if (isProd) {
     const config = {
-      API_BASE_URL: 'https://api.swayami.com', // Update this when prod backend is deployed
+      API_BASE_URL: 'https://api.swayami.com',
       ENVIRONMENT: 'production' as const
     };
     console.log('✅ PRODUCTION CONFIG:', config);
