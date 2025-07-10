@@ -7,42 +7,16 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, loginWithToken, signInWithGoogle } = useApp();
+  const { user, signInWithGoogle } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in and redirect
     if (user && user.isLoggedIn) {
+      console.log('Login: User already logged in, redirecting to dashboard');
       navigate('/dashboard');
     }
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Login: Auth state changed:', event, session);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Login the user in our app context
-          loginWithToken({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.full_name || session.user.email || ''
-          });
-          
-          toast({
-            title: "Welcome!",
-            description: "Successfully signed in with Google.",
-          });
-          
-          navigate('/dashboard');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('Login: User signed out');
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [user, navigate, loginWithToken]);
+  }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -71,11 +45,11 @@ const Login = () => {
         console.error('❌ COMPREHENSIVE LOGIN DEBUG - Google sign-in failed:', result.error);
         
         // Only show error toast for actual failures, not database trigger issues
-        if (result.error && !result.error.message?.includes('Database error saving new user')) {
+        if (result.error && !(result.error as any)?.message?.includes('Database error saving new user')) {
           console.error('❌ COMPREHENSIVE LOGIN DEBUG - Showing error toast for non-database error');
           toast({
             title: "Sign-in Error",
-            description: result.error.message || "Failed to sign in with Google. Please try again.",
+            description: (result.error as any)?.message || "Failed to sign in with Google. Please try again.",
             variant: "destructive",
           });
         } else {

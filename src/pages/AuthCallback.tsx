@@ -106,19 +106,9 @@ const AuthCallback = () => {
             const { data: retrySessionData } = await supabase.auth.getSession();
             if (retrySessionData?.session?.user) {
               console.log('✅ AUTH CALLBACK: Session found on retry!');
-              // Continue with the session
+              // Continue with the main flow - don't duplicate routing logic here
               const finalUser = retrySessionData.session.user;
-              setStatus('success');
-              setMessage('Authentication successful! Redirecting...');
-              
-              setTimeout(() => {
-                if (user?.hasCompletedOnboarding) {
-                  navigate('/dashboard');
-                } else {
-                  navigate('/onboarding');
-                }
-              }, 1500);
-              return;
+              // Let the main flow handle routing after user initialization
             }
           }
           
@@ -136,8 +126,6 @@ const AuthCallback = () => {
         console.log('🔍 User email:', finalUser?.email);
         console.log('🔍 User metadata:', finalUser?.user_metadata);
         
-        setStatus('success');
-        setMessage('Authentication successful! Redirecting...');
         setDebugInfo(prev => ({
           ...prev,
           finalUser: {
@@ -151,19 +139,38 @@ const AuthCallback = () => {
         console.log('🔄 AUTH CALLBACK DEBUG - Step 3: Processing user in context...');
         console.log('🔄 NOTE: If MongoDB CORS errors occur, app will use localStorage fallback');
         
-        // Wait a moment for the session to be established
+        // Wait for the AppContext to process the user and set up the user state
+        console.log('⏳ AUTH CALLBACK: Waiting for user context initialization...');
+        
+        // Give the auth state change listener in AppContext time to initialize the user
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        setStatus('success');
+        setMessage('Authentication successful! Redirecting...');
+        
+        // Final routing decision with longer timeout to ensure context is ready
         setTimeout(() => {
-          console.log('🔄 Redirecting to appropriate page...');
+          console.log('🔄 AUTH CALLBACK: Making final routing decision...');
+          console.log('🔍 Current user context:', {
+            hasUser: !!user,
+            hasCompletedOnboarding: user?.hasCompletedOnboarding,
+            isLoggedIn: user?.isLoggedIn
+          });
           
-          // Check if user has completed onboarding
-          if (user?.hasCompletedOnboarding) {
-            console.log('🔄 User has completed onboarding, redirecting to dashboard');
+          // If user context indicates onboarding is completed, go to dashboard
+          if (user?.hasCompletedOnboarding && user?.isLoggedIn) {
+            console.log('✅ AUTH CALLBACK: User has completed onboarding, redirecting to dashboard');
             navigate('/dashboard');
+          } else if (user?.isLoggedIn && !user?.hasCompletedOnboarding) {
+            console.log('✅ AUTH CALLBACK: User is logged in but needs onboarding, redirecting to onboarding');
+            navigate('/onboarding');
           } else {
-            console.log('🔄 User needs onboarding, redirecting to onboarding');
+            // Fallback: If user context isn't ready yet, default to onboarding for new users
+            console.log('⚠️ AUTH CALLBACK: User context not fully ready, defaulting to onboarding flow');
+            console.log('🔄 AUTH CALLBACK: This ensures new users get proper onboarding experience');
             navigate('/onboarding');
           }
-        }, 1500);
+        }, 2000);
 
       } catch (error: unknown) {
         console.error('❌ AUTH CALLBACK CRITICAL ERROR:', error);
