@@ -25,24 +25,6 @@ const Progress = () => {
 
   // Only include picked goals
   const pickedGoals = goals.filter(g => g.status === 'active');
-  const { journalEntries = [] } = useApp();
-
-  // In the main render, before mapping over pickedGoals or journalEntries:
-  {pickedGoals.length === 0 && (
-    <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
-      <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-      <h4 className="text-md font-semibold text-gray-600 mb-2">No goals yet. Pick a goal to get started!</h4>
-    </div>
-  )}
-
-  {journalEntries.length === 0 && (
-    <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
-      <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-      <h4 className="text-md font-semibold text-gray-600 mb-2">No reflections yet. Start your mindfulness journey!</h4>
-    </div>
-  )}
-
-  // When mapping over pickedGoals or journalEntries, use the filtered arrays and only render if they have length > 0
 
   // Mock achievements system
   const achievements: Achievement[] = [
