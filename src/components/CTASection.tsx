@@ -10,7 +10,7 @@ const CTASection = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-r from-swayami-primary to-green-600 dark:from-purple-800 dark:to-purple-900">
+    <section className="py-20 bg-gradient-to-r from-swayami-primary to-green-600 dark:from-green-800 dark:to-green-900">
       <div className="swayami-container text-center">
         <div className="max-w-3xl mx-auto fade-up-on-scroll">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 leading-tight">

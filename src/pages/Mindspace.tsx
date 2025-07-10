@@ -4,7 +4,8 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/contexts/AppContext';
-import { Brain, Search, Sparkles, Save } from 'lucide-react';
+import { apiService } from '@/services/api';
+import { Brain, Search, Sparkles, Save, CheckCircle2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const moods = [
@@ -24,91 +25,193 @@ const Mindspace = () => {
   const [journalText, setJournalText] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<{
     summary?: string;
     moodAnalysis?: string;
     extractedTasks?: string[];
   }>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = () => {
-    if (journalText.trim()) {
+  const handleSubmit = async () => {
+    if (!journalText.trim()) return;
+    
+    setIsSaving(true);
+    try {
       const entry = {
         content: journalText,
         mood_score: selectedMood ? moods.findIndex(m => m.label === selectedMood) + 1 : undefined,
         summary: analysis.summary,
       };
       
-      addJournalEntry(entry);
+      await addJournalEntry(entry);
+      
       toast({
-        title: "Entry Saved ✅",
-        description: "Your reflection has been saved successfully.",
+        title: "Journal Saved Successfully ✅",
+        description: "Your reflection has been saved to the database.",
       });
       
+      // Clear the form after successful save
       setJournalText('');
       setSelectedMood('');
       setAnalysis({});
       setCurrentEntryId(null);
+    } catch (error) {
+      console.error('❌ Error saving journal entry:', error);
+      toast({
+        title: "Save Failed ❌",
+        description: "Unable to save your reflection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleSummarize = () => {
+  // Auto-save functionality (save every 30 seconds if there's content)
+  React.useEffect(() => {
     if (!journalText.trim()) return;
     
-    // Mock AI summarization
-    const summaries = [
-      "You're feeling reflective about your current progress and are looking for clarity on next steps. There's a sense of both accomplishment and uncertainty about the future direction.",
-      "Your thoughts reveal a desire for growth and self-improvement, with some underlying concerns about maintaining balance in your life.",
-      "You're processing recent experiences and seeking ways to optimize your daily routines for better productivity and wellbeing.",
-    ];
+    const autoSaveTimer = setTimeout(async () => {
+      if (journalText.trim() && !isSaving) {
+        console.log('🔄 Auto-saving journal entry...');
+        try {
+          const entry = {
+            content: journalText,
+            mood_score: selectedMood ? moods.findIndex(m => m.label === selectedMood) + 1 : undefined,
+            summary: analysis.summary,
+          };
+          
+          await addJournalEntry(entry);
+          console.log('✅ Auto-save completed');
+        } catch (error) {
+          console.error('❌ Auto-save failed:', error);
+        }
+      }
+    }, 30000); // 30 seconds
     
-    const randomSummary = summaries[Math.floor(Math.random() * summaries.length)];
-    setAnalysis(prev => ({ ...prev, summary: randomSummary }));
+    return () => clearTimeout(autoSaveTimer);
+  }, [journalText, selectedMood, analysis.summary, isSaving]);
+
+  const handleSummarize = async () => {
+    if (!journalText.trim()) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const result = await apiService.analyzeJournal(journalText);
+      
+      setAnalysis(prev => ({ 
+        ...prev, 
+        summary: result.summary || 'Analysis completed successfully.',
+        insights: result.insights || [],
+        recommendations: result.recommendations || []
+      }));
+      
+      toast({
+        title: "Analysis Complete ✅",
+        description: "Your thoughts have been analyzed successfully.",
+      });
+    } catch (error) {
+      console.error('❌ Error analyzing journal:', error);
+      toast({
+        title: "Analysis Failed ❌",
+        description: "Unable to analyze your thoughts. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Fallback to a basic summary
+      setAnalysis(prev => ({ 
+        ...prev, 
+        summary: "Your reflection has been recorded. Consider reviewing your thoughts to gain insights."
+      }));
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleAnalyzeMood = () => {
+  const handleAnalyzeMood = async () => {
     if (!selectedMood) return;
     
-    // Mock mood analysis
-    const analyses = {
-      'Happy': "Your positive mood indicates high energy and optimism. This is an excellent time for creative tasks and building relationships.",
-      'Sad': "You're experiencing lower energy, which is natural. Consider gentle activities like reading or light exercise to nurture yourself.",
-      'Frustrated': "Your frustration suggests you're pushing against obstacles. Channel this energy into problem-solving and breaking down barriers.",
-      'Anxious': "Your anxiety shows you care deeply about outcomes. Practice breathing exercises and focus on one task at a time.",
-      'Tired': "Your fatigue indicates you need rest. Prioritize sleep and consider what's draining your energy.",
-      'Thoughtful': "Your contemplative mood is perfect for reflection and planning. Use this time for strategic thinking.",
-      'Motivated': "Your high motivation is powerful - harness it for your most important goals while it's strong.",
-      'Calm': "Your peaceful state is ideal for meditation and mindful activities. Enjoy this centered feeling.",
-    };
-    
-    setAnalysis(prev => ({ 
-      ...prev, 
-      moodAnalysis: analyses[selectedMood as keyof typeof analyses] || "Your mood reflects your current state of mind and offers insights for your next actions."
-    }));
+    setIsAnalyzing(true);
+    try {
+      // For now, use a simple analysis based on the selected mood
+      // In the future, this could call a mood analysis API endpoint
+      const moodInsights = {
+        'Happy': "Your positive mood indicates high energy and optimism. This is an excellent time for creative tasks and building relationships.",
+        'Sad': "You're experiencing lower energy, which is natural. Consider gentle activities like reading or light exercise to nurture yourself.",
+        'Frustrated': "Your frustration suggests you're pushing against obstacles. Channel this energy into problem-solving and breaking down barriers.",
+        'Anxious': "Your anxiety shows you care deeply about outcomes. Practice breathing exercises and focus on one task at a time.",
+        'Tired': "Your fatigue indicates you need rest. Prioritize sleep and consider what's draining your energy.",
+        'Thoughtful': "Your contemplative mood is perfect for reflection and planning. Use this time for strategic thinking.",
+        'Motivated': "Your high motivation is powerful - harness it for your most important goals while it's strong.",
+        'Calm': "Your peaceful state is ideal for meditation and mindful activities. Enjoy this centered feeling.",
+      };
+      
+      setAnalysis(prev => ({ 
+        ...prev, 
+        moodAnalysis: moodInsights[selectedMood as keyof typeof moodInsights] || "Your mood reflects your current state of mind and offers insights for your next actions."
+      }));
+      
+      toast({
+        title: "Mood Analysis Complete ✅",
+        description: "Your mood has been analyzed successfully.",
+      });
+    } catch (error) {
+      console.error('❌ Error analyzing mood:', error);
+      toast({
+        title: "Mood Analysis Failed ❌",
+        description: "Unable to analyze your mood. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleExtractTasks = () => {
+  const handleExtractTasks = async () => {
     if (!journalText.trim()) return;
     
-    // Mock task extraction based on common patterns
-    const possibleTasks = [
-      "Schedule one-on-one with team member",
-      "Research industry trends",
-      "Update project timeline",
-      "Plan weekend self-care activities",
-      "Organize workspace for better focus",
-      "Reach out to mentor for guidance",
-      "Review and adjust monthly goals",
-      "Set boundaries with distractions",
-      "Practice mindfulness meditation",
-      "Exercise for stress relief",
-    ];
-    
-    // Select 3-4 random tasks
-    const tasks = possibleTasks
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.floor(Math.random() * 2) + 3);
-    
-    setAnalysis(prev => ({ ...prev, extractedTasks: tasks }));
+    setIsAnalyzing(true);
+    try {
+      // Use the journal analysis to extract potential tasks
+      const result = await apiService.analyzeJournal(journalText);
+      
+      // Extract tasks from recommendations or insights
+      const extractedTasks = [
+        ...(result.recommendations || []),
+        ...(result.insights || []).filter(insight => 
+          insight.toLowerCase().includes('task') || 
+          insight.toLowerCase().includes('action') ||
+          insight.toLowerCase().includes('step')
+        )
+      ].slice(0, 4); // Limit to 4 tasks
+      
+      setAnalysis(prev => ({ ...prev, extractedTasks }));
+      
+      toast({
+        title: "Task Extraction Complete ✅",
+        description: "Potential tasks have been identified from your reflection.",
+      });
+    } catch (error) {
+      console.error('❌ Error extracting tasks:', error);
+      toast({
+        title: "Task Extraction Failed ❌",
+        description: "Unable to extract tasks. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Fallback to basic task suggestions
+      setAnalysis(prev => ({ 
+        ...prev, 
+        extractedTasks: [
+          "Review your current goals",
+          "Plan your next steps",
+          "Schedule time for reflection"
+        ]
+      }));
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -153,11 +256,15 @@ const Mindspace = () => {
 
               <Button 
                 onClick={handleSubmit}
-                disabled={!journalText.trim()}
+                disabled={!journalText.trim() || isSaving}
                 className="w-full mb-4 bg-swayami-primary hover:bg-swayami-primary-hover rounded-xl"
               >
-                <Save className="w-4 h-4 mr-2" />
-                Save Entry
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {isSaving ? 'Saving...' : 'Save Entry'}
               </Button>
 
               {journalText.trim() && (
@@ -165,26 +272,41 @@ const Mindspace = () => {
                   <Button 
                     variant="outline" 
                     onClick={handleSummarize}
+                    disabled={isAnalyzing}
                     className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                   >
-                    <Brain className="w-4 h-4 mr-2" />
+                    {isAnalyzing ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Brain className="w-4 h-4 mr-2" />
+                    )}
                     Summarize with AI
                   </Button>
                   <Button 
                     variant="outline" 
                     onClick={handleExtractTasks}
+                    disabled={isAnalyzing}
                     className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                   >
-                    <Search className="w-4 h-4 mr-2" />
+                    {isAnalyzing ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4 mr-2" />
+                    )}
                     Get Smart Suggestions
                   </Button>
                   {selectedMood && (
                     <Button 
                       variant="outline" 
                       onClick={handleAnalyzeMood}
+                      disabled={isAnalyzing}
                       className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                     >
-                      <Sparkles className="w-4 h-4 mr-2" />
+                      {isAnalyzing ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-2" />
+                      )}
                       Analyze Mood
                     </Button>
                   )}
@@ -236,35 +358,37 @@ const Mindspace = () => {
             {/* Recent Entries */}
             <div className="bg-white border border-swayami-border rounded-xl p-6">
               <h4 className="font-semibold text-swayami-black mb-3">Recent Entries</h4>
-              <div className="space-y-3">
-                {journalEntries.slice(-5).reverse().map((entry) => (
-                  <div key={entry._id} className="border-b border-swayami-border pb-3 last:border-b-0">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-sm text-swayami-light-text">
-                        {new Date(entry.created_at || '').toLocaleDateString()}
-                      </span>
-                      {entry.mood_score && (
-                        <>
-                          <span className="text-sm">
-                            {moods[entry.mood_score - 1]?.emoji}
-                          </span>
-                          <span className="text-xs text-swayami-light-text">
-                            {moods[entry.mood_score - 1]?.label}
-                          </span>
-                        </>
-                      )}
+              {journalEntries.length === 0 ? (
+                <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+                  <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <h4 className="text-md font-semibold text-gray-600 mb-2">No reflections yet. Start your mindfulness journey!</h4>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {journalEntries.slice(-5).reverse().map((entry) => (
+                    <div key={entry._id} className="border-b border-swayami-border pb-3 last:border-b-0">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm text-swayami-light-text">
+                          {new Date(entry.created_at || '').toLocaleDateString()}
+                        </span>
+                        {entry.mood_score && (
+                          <>
+                            <span className="text-sm">
+                              {moods[entry.mood_score - 1]?.emoji}
+                            </span>
+                            <span className="text-xs text-swayami-light-text">
+                              {moods[entry.mood_score - 1]?.label}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-sm text-swayami-light-text line-clamp-2">
+                        {entry.content.length > 100 ? entry.content.substring(0, 100) + '...' : entry.content}
+                      </p>
                     </div>
-                    <p className="text-sm text-swayami-light-text line-clamp-2">
-                      {entry.content.length > 100 ? entry.content.substring(0, 100) + '...' : entry.content}
-                    </p>
-                  </div>
-                ))}
-                {journalEntries.length === 0 && (
-                  <p className="text-sm text-swayami-light-text text-center py-4">
-                    No entries yet. Start journaling to see your reflection history.
-                  </p>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

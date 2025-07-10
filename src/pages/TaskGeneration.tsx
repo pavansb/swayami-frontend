@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/contexts/AppContext';
 import { apiService } from '@/services/api';
-import { Sparkles, RefreshCw, Star, Clock, ArrowRight, CheckCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, Star, Clock, ArrowRight, CheckCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 // Define task types here since we removed the dangerous OpenAI service
@@ -415,44 +415,51 @@ const TaskGeneration = () => {
 
                 {/* Tasks */}
                 <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {goalWithTasks.tasks.map((task, taskIndex) => (
-                      <div 
-                        key={taskIndex}
-                        className={`border-2 rounded-xl p-4 transition-all duration-200 ${
-                          goalWithTasks.selectedTasks[taskIndex]
-                            ? 'border-[#6FCC7F] bg-green-50 shadow-md'
-                            : 'border-gray-200 bg-white hover:border-green-200'
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <Checkbox
-                            checked={goalWithTasks.selectedTasks[taskIndex]}
-                            onCheckedChange={() => toggleTaskSelection(goalWithTasks.goalId, taskIndex)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1">
-                            <h5 className="font-semibold text-gray-900 mb-2">{task.title}</h5>
-                            <p className="text-gray-600 text-sm mb-3">{task.description}</p>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                                  {task.priority}
-                                </span>
-                                {task.estimatedDuration && (
-                                  <div className="flex items-center text-gray-500 text-xs">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {task.estimatedDuration}m
-                                  </div>
-                                )}
+                  {goalWithTasks.tasks.length === 0 ? (
+                    <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+                      <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                      <h4 className="text-md font-semibold text-gray-600 mb-2">No tasks generated for this goal yet.</h4>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {goalWithTasks.tasks.map((task, taskIndex) => (
+                        <div 
+                          key={taskIndex}
+                          className={`border-2 rounded-xl p-4 transition-all duration-200 ${
+                            goalWithTasks.selectedTasks[taskIndex]
+                              ? 'border-[#6FCC7F] bg-green-50 shadow-md'
+                              : 'border-gray-200 bg-white hover:border-green-200'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              checked={goalWithTasks.selectedTasks[taskIndex]}
+                              onCheckedChange={() => toggleTaskSelection(goalWithTasks.goalId, taskIndex)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 mb-2">{task.title}</h5>
+                              <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                              
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                                    {task.priority}
+                                  </span>
+                                  {task.estimatedDuration && (
+                                    <div className="flex items-center text-gray-500 text-xs">
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {task.estimatedDuration}m
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Rating */}

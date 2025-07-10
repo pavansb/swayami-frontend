@@ -26,6 +26,8 @@ interface Task {
   due_date?: string;
   created_at?: string;
   user_id?: string;
+  sequential?: boolean; // Whether this task depends on previous tasks being completed
+  order?: number; // Order within a sequential group
 }
 
 interface JournalEntry {
@@ -59,6 +61,7 @@ interface AppContextType {
   habits: Array<{ _id: string; emoji: string; label: string; completed: boolean }>;
   isLoading: boolean;
   serviceError: string | null;
+  quotes: string[];
   login: (email: string) => void;
   loginWithToken: (userData: { id: string; email: string; name?: string }) => void;
   logout: () => void;
@@ -104,6 +107,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceError, setServiceError] = useState<string | null>(null);
+  const [quotes, setQuotes] = useState<string[]>([]);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -707,6 +711,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     habits,
     isLoading,
     serviceError,
+    quotes,
     login,
     loginWithToken,
     logout,

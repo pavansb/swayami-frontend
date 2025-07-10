@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
-import { Edit, Archive, RefreshCw, Plus, Target, Calendar, TrendingUp, Settings } from 'lucide-react';
+import { Edit, Archive, RefreshCw, Plus, Target, Calendar, TrendingUp, Settings, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -51,6 +51,9 @@ const Goals = () => {
       day: 'numeric'
     });
   };
+
+  // Only include picked goals
+  const pickedGoals = goals.filter(g => g.status === 'active');
 
   return (
     <Layout>
@@ -124,24 +127,15 @@ const Goals = () => {
         </div>
 
         {/* Goals List */}
-        {goals.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-            <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Goals Yet</h3>
-            <p className="text-gray-600 mb-6">
-              Start your journey by setting your first goal. Our AI will help you break it down into actionable steps.
-            </p>
-            <Button 
-              onClick={() => navigate('/onboarding')}
-              className="bg-[#6FCC7F] hover:bg-[#5bb96a] px-8 py-3"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create Your First Goal
-            </Button>
+        {pickedGoals.length === 0 ? (
+          <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+            <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <h4 className="text-md font-semibold text-gray-600 mb-2">No goals yet. Pick a goal to get started!</h4>
+            {/* Optionally, add a button to onboarding or goal creation */}
           </div>
         ) : (
           <div className="space-y-6">
-            {goals.map((goal) => {
+            {pickedGoals.map((goal) => {
               const progress = getGoalProgress(goal._id);
               const stats = getGoalStats(goal._id);
               

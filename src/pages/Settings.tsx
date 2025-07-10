@@ -9,12 +9,14 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/components/ThemeProvider';
 import { User, Bell, Shield, Palette, Download, Trash2, RefreshCw } from 'lucide-react';
 import UserProfile from '@/components/UserProfile';
 
 const Settings = () => {
   const { user, logout, refreshUserProfile } = useApp();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {
@@ -104,7 +106,11 @@ const Settings = () => {
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="dark-mode">Dark Mode</Label>
-                <Switch id="dark-mode" />
+                <Switch 
+                  id="dark-mode" 
+                  checked={theme === 'dark'}
+                  onCheckedChange={toggleTheme}
+                />
               </div>
             </CardContent>
           </Card>

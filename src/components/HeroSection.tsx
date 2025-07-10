@@ -10,7 +10,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative py-20 lg:py-32 bg-gradient-to-br from-white via-purple-50/30 to-white overflow-hidden">
+    <section className="relative py-20 lg:py-32 bg-gradient-to-br from-white via-green-50/30 to-white overflow-hidden">
       {/* Subtle background waves */}
       <div className="absolute inset-0 opacity-20">
         <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 1440 800" fill="none">
@@ -63,7 +63,7 @@ const HeroSection = () => {
               app.swayami.com
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-100 to-green-200 border border-gray-200 border-t-0 rounded-b-2xl h-96 flex items-center justify-center shadow-2xl">
+          <div className="bg-gradient-to-br from-green-100 to-green-200 border border-gray-200 border-t-0 rounded-b-2xl h-96 flex items-center justify-center shadow-2xl">
             <div className="text-[#6FCC7F] text-6xl font-bold opacity-30">
               Swayami
             </div>

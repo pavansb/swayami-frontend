@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useApp } from '@/contexts/AppContext';
-import { Calendar, Flame, Trophy, Target, Star, Zap, Award, TrendingUp } from 'lucide-react';
+import { Calendar, Flame, Trophy, Target, Star, Zap, Award, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Achievement {
@@ -22,6 +22,27 @@ const Progress = () => {
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
   const currentStreak = user?.streak || 0;
+
+  // Only include picked goals
+  const pickedGoals = goals.filter(g => g.status === 'active');
+  const { journalEntries = [] } = useApp();
+
+  // In the main render, before mapping over pickedGoals or journalEntries:
+  {pickedGoals.length === 0 && (
+    <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+      <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+      <h4 className="text-md font-semibold text-gray-600 mb-2">No goals yet. Pick a goal to get started!</h4>
+    </div>
+  )}
+
+  {journalEntries.length === 0 && (
+    <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+      <CheckCircle2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+      <h4 className="text-md font-semibold text-gray-600 mb-2">No reflections yet. Start your mindfulness journey!</h4>
+    </div>
+  )}
+
+  // When mapping over pickedGoals or journalEntries, use the filtered arrays and only render if they have length > 0
 
   // Mock achievements system
   const achievements: Achievement[] = [
@@ -155,11 +176,9 @@ const Progress = () => {
 
   const getLevelInfo = (tasksCompleted: number) => {
     const levels = [
-      { name: 'Mindful Novice', min: 0, max: 5, color: 'bg-gray-100 text-gray-800' },
-      { name: 'Focused Explorer', min: 6, max: 15, color: 'bg-blue-100 text-blue-800' },
-      { name: 'Dedicated Achiever', min: 16, max: 30, color: 'bg-green-100 text-green-800' },
-      { name: 'Productivity Master', min: 31, max: 50, color: 'bg-green-100 text-purple-800' },
-      { name: 'Self-Reliance Legend', min: 51, max: 999, color: 'bg-yellow-100 text-yellow-800' },
+      { name: 'Mindful Novice', min: 0, max: 10, color: 'bg-green-100 text-green-800' },
+      { name: 'Focus Explorer', min: 11, max: 20, color: 'bg-green-100 text-green-800' },
+      { name: 'Productivity Master', min: 31, max: 50, color: 'bg-green-100 text-green-800' },
     ];
 
     const currentLevel = levels.find(level => 
