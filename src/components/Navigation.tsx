@@ -60,7 +60,7 @@ const Navigation = () => {
               </Link>
               <Button 
                 onClick={handleStartToday}
-                className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg relative"
+                className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg relative"
               >
                 Start Today
                 <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">
@@ -74,14 +74,14 @@ const Navigation = () => {
               {/* Mobile CTA Buttons */}
               <Link 
                 to="/login"
-                className="text-xs font-medium text-[#9650D4] hover:text-[#8547C4] transition-colors px-3 py-2"
+                className="text-xs font-medium text-[#6FCC7F] hover:text-[#5bb96a] transition-colors px-3 py-2"
               >
                 Login
               </Link>
               <Button 
                 onClick={handleStartToday}
                 size="sm"
-                className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 relative"
+                className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 relative"
               >
                 Start Today
                 <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold text-[10px]">
@@ -108,13 +108,13 @@ const Navigation = () => {
               <div className="space-y-6">
                 <button 
                   onClick={() => scrollToSection('how-it-works')}
-                  className="block w-full text-left text-gray-700 hover:text-[#9650D4] text-lg font-medium transition-colors py-2"
+                  className="block w-full text-left text-gray-700 hover:text-[#6FCC7F] text-lg font-medium transition-colors py-2"
                 >
                   How It Works
                 </button>
                 <button 
                   onClick={() => scrollToSection('testimonials')}
-                  className="block w-full text-left text-gray-700 hover:text-[#9650D4] text-lg font-medium transition-colors py-2"
+                  className="block w-full text-left text-gray-700 hover:text-[#6FCC7F] text-lg font-medium transition-colors py-2"
                 >
                   Testimonials
                 </button>
@@ -122,13 +122,13 @@ const Navigation = () => {
                 <Link 
                   to="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full text-left text-gray-700 hover:text-[#9650D4] text-lg font-medium transition-colors py-2"
+                  className="block w-full text-left text-gray-700 hover:text-[#6FCC7F] text-lg font-medium transition-colors py-2"
                 >
                   Login
                 </Link>
                 <Button 
                   onClick={handleStartToday}
-                  className="w-full bg-[#9650D4] hover:bg-[#8547C4] text-white py-3 rounded-xl text-lg font-semibold transition-all duration-200 relative"
+                  className="w-full bg-[#6FCC7F] hover:bg-[#5bb96a] text-white py-3 rounded-xl text-lg font-semibold transition-all duration-200 relative"
                 >
                   Start Today
                   <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold">

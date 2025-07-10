@@ -65,7 +65,7 @@ const Goals = () => {
           </div>
           <Button 
             onClick={() => navigate('/onboarding')}
-            className="bg-[#9650D4] hover:bg-[#8547C4] px-6 py-3"
+            className="bg-[#6FCC7F] hover:bg-[#5bb96a] px-6 py-3"
           >
             <Plus className="w-5 h-5 mr-2" />
             Add New Goal
@@ -80,7 +80,7 @@ const Goals = () => {
                 <p className="text-sm font-medium text-gray-600">Total Goals</p>
                 <p className="text-2xl font-bold text-gray-900">{goals.length}</p>
               </div>
-              <Target className="w-8 h-8 text-[#9650D4]" />
+              <Target className="w-8 h-8 text-[#6FCC7F]" />
             </div>
           </div>
           
@@ -112,13 +112,13 @@ const Goals = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg. Progress</p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-green-600">
                   {goals.length > 0 
                     ? Math.round(goals.reduce((acc, goal) => acc + getGoalProgress(goal._id), 0) / goals.length) 
                     : 0}%
                 </p>
               </div>
-              <Settings className="w-8 h-8 text-purple-600" />
+              <Settings className="w-8 h-8 text-green-600" />
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ const Goals = () => {
             </p>
             <Button 
               onClick={() => navigate('/onboarding')}
-              className="bg-[#9650D4] hover:bg-[#8547C4] px-8 py-3"
+              className="bg-[#6FCC7F] hover:bg-[#5bb96a] px-8 py-3"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create Your First Goal
@@ -151,7 +151,7 @@ const Goals = () => {
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   {/* Goal Header */}
-                  <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50">
+                  <div className="p-6 bg-gradient-to-r from-green-50 to-pink-50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
@@ -166,7 +166,7 @@ const Goals = () => {
                         <div className="mb-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-600">Progress</span>
-                            <span className="text-sm font-bold text-[#9650D4]">{progress}%</span>
+                            <span className="text-sm font-bold text-[#6FCC7F]">{progress}%</span>
                           </div>
                           <Progress value={progress} className="h-3" />
                         </div>

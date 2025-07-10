@@ -94,9 +94,9 @@ const ExamplePrompts = ({
 
   if (selectedGoals.length === 0) {
     return (
-      <div className="lg:w-1/3 bg-gradient-to-br from-purple-50 to-purple-100 p-8 flex items-center justify-center">
+      <div className="lg:w-1/3 bg-gradient-to-br from-green-50 to-green-100 p-8 flex items-center justify-center">
         <div className="text-center">
-          <Sparkles className="w-16 h-16 text-[#9650D4] mx-auto mb-4 opacity-50" />
+                      <Sparkles className="w-16 h-16 text-[#6FCC7F] mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             Example Prompts
           </h3>
@@ -109,10 +109,10 @@ const ExamplePrompts = ({
   }
 
   return (
-    <div className="lg:w-1/3 bg-gradient-to-br from-purple-50 to-purple-100 p-8">
+    <div className="lg:w-1/3 bg-gradient-to-br from-green-50 to-green-100 p-8">
       <div className="sticky top-8">
         <div className="flex items-center mb-6">
-          <Sparkles className="w-6 h-6 text-[#9650D4] mr-2" />
+                              <Sparkles className="w-6 h-6 text-[#6FCC7F] mr-2" />
           <h3 className="text-xl font-semibold text-gray-800">
             Example Goals
           </h3>
@@ -145,13 +145,13 @@ const ExamplePrompts = ({
                     className="p-1.5 rounded-lg hover:bg-white/50 transition-colors disabled:opacity-50"
                     title="Generate new suggestions"
                   >
-                    <Sparkles className={`w-4 h-4 text-[#9650D4] ${isRegenerating === goalId ? 'animate-spin' : ''}`} />
+                    <Sparkles className={`w-4 h-4 text-[#6FCC7F] ${isRegenerating === goalId ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
                 <div 
                   key={currentIndex} // Force re-render for animation
                   onClick={() => onSuggestionClick(goalId, currentExample)}
-                  className="text-gray-700 text-sm leading-relaxed animate-in fade-in duration-500 cursor-pointer hover:bg-white/30 rounded-lg p-2 transition-colors border border-transparent hover:border-[#9650D4]/30"
+                  className="text-gray-700 text-sm leading-relaxed animate-in fade-in duration-500 cursor-pointer hover:bg-white/30 rounded-lg p-2 transition-colors border border-transparent hover:border-[#6FCC7F]/30"
                   title="Click to use this suggestion"
                 >
                   "{currentExample}"
@@ -163,7 +163,7 @@ const ExamplePrompts = ({
                         key={index}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${
                           index === currentIndex 
-                            ? 'bg-[#9650D4]' 
+                            ? 'bg-[#6FCC7F]' 
                             : 'bg-gray-300'
                         }`}
                       />
@@ -179,7 +179,7 @@ const ExamplePrompts = ({
         <div className="mt-8 p-4 bg-white/50 rounded-xl border border-white/50">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-[#9650D4]" />
+                                  <Sparkles className="w-4 h-4 text-[#6FCC7F]" />
               <span className="text-xs font-semibold text-gray-700">Pro Tips</span>
             </div>
             <p className="text-xs text-gray-600">
@@ -272,8 +272,8 @@ const Onboarding = () => {
                 onClick={() => handleGoalToggle(goal.id)}
                 className={`bg-white border-2 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg hover:translate-y-[-4px] ${
                   selectedGoals.includes(goal.id) 
-                    ? 'border-[#9650D4] bg-purple-50 shadow-lg' 
-                    : 'border-gray-200 hover:border-purple-200'
+                    ? 'border-[#6FCC7F] bg-green-50 shadow-lg' 
+                    : 'border-gray-200 hover:border-green-200'
                 }`}
               >
                 <div className="text-center">
@@ -290,7 +290,7 @@ const Onboarding = () => {
             <Button 
               onClick={handleNext}
               disabled={selectedGoals.length === 0}
-              className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next Step
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -325,7 +325,7 @@ const Onboarding = () => {
                 
                 return (
                   <div key={goalId} className={`bg-white border-2 rounded-2xl p-6 shadow-sm transition-all duration-300 ${
-                    hasContent ? 'border-[#9650D4] bg-purple-50/30' : 'border-gray-200'
+                    hasContent ? 'border-[#6FCC7F] bg-green-50/30' : 'border-gray-200'
                   }`}>
                     <div className="flex items-center mb-4">
                       <span className="text-2xl mr-3">{goal.emoji}</span>
@@ -333,7 +333,7 @@ const Onboarding = () => {
                         {goal.title}
                       </h3>
                       {hasContent && (
-                        <div className="ml-auto flex items-center text-[#9650D4] text-sm">
+                        <div className="ml-auto flex items-center text-[#6FCC7F] text-sm">
                           <Sparkles className="w-4 h-4 mr-1" />
                           Ready
                         </div>
@@ -349,8 +349,8 @@ const Onboarding = () => {
                       }))}
                       className={`min-h-24 resize-none transition-all duration-200 ${
                         hasContent 
-                          ? 'border-[#9650D4] focus:border-[#9650D4] focus:ring-[#9650D4] bg-white' 
-                          : 'border-gray-200 focus:border-[#9650D4] focus:ring-[#9650D4]'
+                          ? 'border-[#6FCC7F] focus:border-[#6FCC7F] focus:ring-[#6FCC7F] bg-white' 
+                          : 'border-gray-200 focus:border-[#6FCC7F] focus:ring-[#6FCC7F]'
                       }`}
                     />
                   </div>
@@ -370,7 +370,7 @@ const Onboarding = () => {
               <Button 
                 onClick={handleComplete}
                 disabled={selectedGoals.some(goalId => !goalDescriptions[goalId]?.trim())}
-                className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Let's Begin
                 <ArrowRight className="w-5 h-5 ml-2" />

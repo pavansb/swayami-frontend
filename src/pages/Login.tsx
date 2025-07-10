@@ -141,9 +141,9 @@ const Login = () => {
       </div>
 
       {/* Right Panel - Visual/Branding */}
-      <div className="hidden lg:flex w-3/5 bg-gradient-to-br from-purple-50 to-purple-100 items-center justify-center p-12">
+      <div className="hidden lg:flex w-3/5 bg-gradient-to-br from-green-50 to-green-100 items-center justify-center p-12">
         <div className="text-center">
-          <div className="text-[#9650D4] text-8xl font-bold opacity-20 mb-8">
+          <div className="text-[#6FCC7F] text-8xl font-bold opacity-20 mb-8">
             Swayami
           </div>
           <p className="text-[#4A4A4A] text-xl max-w-md leading-relaxed">

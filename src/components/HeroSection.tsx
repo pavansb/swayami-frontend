@@ -17,8 +17,8 @@ const HeroSection = () => {
           <path d="M0,320 C480,380 960,200 1440,280 L1440,800 L0,800 Z" fill="url(#gradient)" />
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#9650D4" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#9650D4" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="#6FCC7F" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#6FCC7F" stopOpacity="0.05" />
             </linearGradient>
           </defs>
         </svg>
@@ -28,7 +28,7 @@ const HeroSection = () => {
         <div className="mb-16 animate-fade-in">
           <h1 className="text-5xl lg:text-7xl font-bold text-[#1A1A1A] mb-6 leading-tight tracking-tight">
             Command Your Growth.<br />
-            <span className="text-[#9650D4]">Shape Your Destiny.</span>
+            <span className="text-[#6FCC7F]">Shape Your Destiny.</span>
           </h1>
           <p className="text-xl lg:text-2xl text-[#4A4A4A] mb-10 leading-relaxed font-normal max-w-4xl mx-auto">
             Swayami is your AI-powered self-reliance mirror — guiding you to set meaningful goals, act with clarity, and reflect with depth.
@@ -37,7 +37,7 @@ const HeroSection = () => {
           <div className="mb-4">
             <button 
               onClick={handleStartToday}
-              className="bg-[#9650D4] hover:bg-[#8547C4] text-white text-lg font-semibold px-10 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 relative"
+              className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white text-lg font-semibold px-10 py-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 relative"
             >
               Start Today →
               <span className="absolute -top-3 -right-3 bg-orange-500 text-white text-sm px-3 py-1 rounded-full font-bold">
@@ -63,8 +63,8 @@ const HeroSection = () => {
               app.swayami.com
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-100 to-purple-200 border border-gray-200 border-t-0 rounded-b-2xl h-96 flex items-center justify-center shadow-2xl">
-            <div className="text-[#9650D4] text-6xl font-bold opacity-30">
+          <div className="bg-gradient-to-br from-purple-100 to-green-200 border border-gray-200 border-t-0 rounded-b-2xl h-96 flex items-center justify-center shadow-2xl">
+            <div className="text-[#6FCC7F] text-6xl font-bold opacity-30">
               Swayami
             </div>
           </div>

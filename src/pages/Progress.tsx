@@ -138,8 +138,8 @@ const Progress = () => {
           />
           <defs>
             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#9650D4" />
-              <stop offset="50%" stopColor="#C146C7" />
+              <stop offset="0%" stopColor="#6FCC7F" />
+              <stop offset="50%" stopColor="#5bb96a" />
               <stop offset="100%" stopColor="#FF6B9D" />
             </linearGradient>
           </defs>
@@ -158,7 +158,7 @@ const Progress = () => {
       { name: 'Mindful Novice', min: 0, max: 5, color: 'bg-gray-100 text-gray-800' },
       { name: 'Focused Explorer', min: 6, max: 15, color: 'bg-blue-100 text-blue-800' },
       { name: 'Dedicated Achiever', min: 16, max: 30, color: 'bg-green-100 text-green-800' },
-      { name: 'Productivity Master', min: 31, max: 50, color: 'bg-purple-100 text-purple-800' },
+      { name: 'Productivity Master', min: 31, max: 50, color: 'bg-green-100 text-purple-800' },
       { name: 'Self-Reliance Legend', min: 51, max: 999, color: 'bg-yellow-100 text-yellow-800' },
     ];
 
@@ -208,8 +208,8 @@ const Progress = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-              <div className="text-2xl sm:text-3xl font-bold text-[#9650D4] mb-1">
+            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+              <div className="text-2xl sm:text-3xl font-bold text-[#6FCC7F] mb-1">
                 {completedTasks.length}
               </div>
               <div className="text-sm text-gray-600">Tasks Completed</div>
@@ -243,7 +243,7 @@ const Progress = () => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div 
-                  className="bg-gradient-to-r from-[#9650D4] to-[#C146C7] h-3 rounded-full transition-all duration-1000 ease-out"
+                  className="bg-gradient-to-r from-[#6FCC7F] to-[#5bb96a] h-3 rounded-full transition-all duration-1000 ease-out"
                   style={{ width: `${Math.min(progressToNext, 100)}%` }}
                 ></div>
               </div>
@@ -253,7 +253,7 @@ const Progress = () => {
           {/* Quick Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
-              className="flex-1 bg-[#9650D4] hover:bg-[#8547C4] h-12"
+              className="flex-1 bg-[#6FCC7F] hover:bg-[#5bb96a] h-12"
               onClick={() => window.location.href = '/dashboard'}
             >
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -261,7 +261,7 @@ const Progress = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="flex-1 border-[#9650D4] text-[#9650D4] hover:bg-purple-50 h-12"
+              className="flex-1 border-[#6FCC7F] text-[#6FCC7F] hover:bg-green-50 h-12"
               onClick={() => window.location.href = '/mindspace'}
             >
               <Star className="w-4 h-4 mr-2" />
@@ -273,7 +273,7 @@ const Progress = () => {
         {/* Achievements */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center mb-6">
-            <Trophy className="w-6 h-6 text-[#9650D4] mr-3" />
+            <Trophy className="w-6 h-6 text-[#6FCC7F] mr-3" />
             <h2 className="text-xl font-bold text-gray-900">Achievements</h2>
           </div>
 
@@ -283,13 +283,13 @@ const Progress = () => {
                 key={achievement.id}
                 className={`p-4 rounded-xl border-2 transition-all duration-300 ${
                   achievement.unlocked
-                    ? 'border-[#9650D4] bg-purple-50 shadow-md'
+                    ? 'border-[#6FCC7F] bg-green-50 shadow-md'
                     : 'border-gray-200 bg-gray-50'
                 }`}
               >
                 <div className="flex items-center mb-3">
                   <div className={`p-2 rounded-lg ${
-                    achievement.unlocked ? 'bg-[#9650D4] text-white' : 'bg-gray-300 text-gray-600'
+                    achievement.unlocked ? 'bg-[#6FCC7F] text-white' : 'bg-gray-300 text-gray-600'
                   }`}>
                     {achievement.icon}
                   </div>
@@ -319,7 +319,7 @@ const Progress = () => {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-[#9650D4] h-2 rounded-full transition-all duration-500"
+                        className="bg-[#6FCC7F] h-2 rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(((achievement.progress || 0) / achievement.target) * 100, 100)}%`
                         }}
@@ -335,7 +335,7 @@ const Progress = () => {
         {/* Weekly Summary */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center mb-6">
-            <Calendar className="w-6 h-6 text-[#9650D4] mr-3" />
+            <Calendar className="w-6 h-6 text-[#6FCC7F] mr-3" />
             <h2 className="text-xl font-bold text-gray-900">This Week's Highlights</h2>
           </div>
 
@@ -354,8 +354,8 @@ const Progress = () => {
               <div className="text-xs text-gray-600">Tasks Done</div>
             </div>
 
-            <div className="text-center p-4 bg-purple-50 rounded-xl">
-              <div className="text-2xl font-bold text-purple-600 mb-1">
+            <div className="text-center p-4 bg-green-50 rounded-xl">
+              <div className="text-2xl font-bold text-green-600 mb-1">
                 {journalEntries.slice(-7).length}
               </div>
               <div className="text-xs text-gray-600">Reflections</div>

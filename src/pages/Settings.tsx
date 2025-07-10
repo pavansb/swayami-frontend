@@ -19,6 +19,8 @@ const Settings = () => {
 
   const handleLogout = async () => {
     await logout();
+    // Redirect to external static landing page
+    window.location.href = 'https://swayami-spark-bliss.lovable.app';
   };
 
   const handleRefreshProfile = async () => {

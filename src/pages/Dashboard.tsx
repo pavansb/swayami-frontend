@@ -126,7 +126,7 @@ const Dashboard = () => {
       case 'financial':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'career & education':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-green-100 text-purple-800 border-green-200';
       case 'personal development':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'relationships':
@@ -255,7 +255,7 @@ const Dashboard = () => {
                   onClick={regenerateRecommendations}
                   variant="outline"
                   size="sm"
-                  className="border-[#9650D4] text-[#9650D4] hover:bg-purple-50 text-xs sm:text-sm"
+                  className="border-[#6FCC7F] text-[#6FCC7F] hover:bg-green-50 text-xs sm:text-sm"
                 >
                   <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                   Regenerate Suggestions
@@ -263,10 +263,10 @@ const Dashboard = () => {
               </div>
 
               {/* Today's Action Steps Section */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+              <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <CheckCircle2 className="w-5 h-5 text-[#9650D4] mr-3" />
+                    <CheckCircle2 className="w-5 h-5 text-[#6FCC7F] mr-3" />
                     <h3 className="text-lg font-bold text-gray-900">Today's Action Steps</h3>
                   </div>
                   <div className="text-sm text-gray-600">
@@ -278,7 +278,7 @@ const Dashboard = () => {
                 <div className="mb-4">
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className="bg-gradient-to-r from-[#9650D4] to-[#C146C7] h-2 rounded-full transition-all duration-1000 ease-out"
+                      className="bg-gradient-to-r from-[#6FCC7F] to-[#5bb96a] h-2 rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${dailyCompletionRate}%` }}
                     ></div>
                   </div>
@@ -304,7 +304,7 @@ const Dashboard = () => {
                           className={`p-3 rounded-lg border transition-all duration-300 ${
                             task.completed
                               ? 'border-green-200 bg-green-50'
-                              : 'border-gray-200 bg-white hover:border-purple-200'
+                              : 'border-gray-200 bg-white hover:border-green-200'
                           }`}
                         >
                           <div className="flex items-start space-x-3">
@@ -349,7 +349,7 @@ const Dashboard = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => navigate('/progress')}
-                          className="w-full text-xs text-[#9650D4] hover:text-[#8547C4] hover:bg-purple-50"
+                          className="w-full text-xs text-[#6FCC7F] hover:text-[#5bb96a] hover:bg-green-50"
                         >
                           View {categoryTasks.length - 2} more {category} tasks →
                         </Button>
@@ -367,7 +367,7 @@ const Dashboard = () => {
                     </p>
                     <Button 
                       size="sm"
-                      className="bg-[#9650D4] hover:bg-[#8547C4]"
+                      className="bg-[#6FCC7F] hover:bg-[#5bb96a]"
                       onClick={() => navigate('/task-generation')}
                     >
                       Generate Daily Tasks
@@ -450,7 +450,7 @@ const Dashboard = () => {
                     />
                     <Button 
                       onClick={() => handleAddTask(goalType)} 
-                      className="bg-[#9650D4] hover:bg-[#8547C4] h-10 px-4 flex-shrink-0"
+                      className="bg-[#6FCC7F] hover:bg-[#5bb96a] h-10 px-4 flex-shrink-0"
                     >
                       <Plus className="w-4 h-4 sm:w-4 sm:h-4 sm:mr-2" />
                       <span className="hidden sm:inline">Add Task</span>
@@ -487,7 +487,7 @@ const Dashboard = () => {
                       cx="48"
                       cy="48"
                       r="40"
-                      stroke="#9650D4"
+                      stroke="#6FCC7F"
                       strokeWidth="8"
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 40}`}
@@ -507,7 +507,7 @@ const Dashboard = () => {
                       cx="64"
                       cy="64"
                       r="56"
-                      stroke="#9650D4"
+                      stroke="#6FCC7F"
                       strokeWidth="12"
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 56}`}
@@ -524,22 +524,22 @@ const Dashboard = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
                   <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <div className="text-xl sm:text-2xl font-bold text-[#9650D4]">{completedTasks}/{totalTasks}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-[#6FCC7F]">{completedTasks}/{totalTasks}</div>
                     <div className="text-xs sm:text-sm text-gray-600">Tasks Completed</div>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <div className="text-xl sm:text-2xl font-bold text-[#9650D4]">{user?.streak || 0} 🔥</div>
+                    <div className="text-xl sm:text-2xl font-bold text-[#6FCC7F]">{user?.streak || 0} 🔥</div>
                     <div className="text-xs sm:text-sm text-gray-600">Day Streak</div>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <div className="text-base sm:text-lg font-bold text-[#9650D4]">{user?.level || 'Mindful Novice'}</div>
+                    <div className="text-base sm:text-lg font-bold text-[#6FCC7F]">{user?.level || 'Mindful Novice'}</div>
                     <div className="text-xs sm:text-sm text-gray-600">Current Rank</div>
                   </div>
                 </div>
 
                 {completionPercentage < 100 && (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                    <p className="font-medium text-[#9650D4] text-sm sm:text-base">
+                  <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                    <p className="font-medium text-[#6FCC7F] text-sm sm:text-base">
                       Finish Strong Today 💪
                     </p>
                   </div>
@@ -603,13 +603,13 @@ const Dashboard = () => {
               
               <Button 
                 onClick={() => navigate('/mindspace')}
-                className="w-full bg-[#9650D4] hover:bg-[#8547C4] mb-4 sm:mb-6 h-12 text-sm sm:text-base font-semibold"
+                className="w-full bg-[#6FCC7F] hover:bg-[#5bb96a] mb-4 sm:mb-6 h-12 text-sm sm:text-base font-semibold"
               >
                 Write a New Reflection
               </Button>
 
               {/* Daily Motivation Quote */}
-              <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
+              <div className="p-4 sm:p-6 bg-gradient-to-r from-green-50 to-pink-50 rounded-xl">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900 text-sm sm:text-base">Daily Motivation</h4>
                   <Button

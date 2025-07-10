@@ -10,13 +10,13 @@ const CTASection = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-r from-swayami-primary to-purple-600 dark:from-purple-800 dark:to-purple-900">
+    <section className="py-20 bg-gradient-to-r from-swayami-primary to-green-600 dark:from-purple-800 dark:to-purple-900">
       <div className="swayami-container text-center">
         <div className="max-w-3xl mx-auto fade-up-on-scroll">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 leading-tight">
             You don't need another productivity app. You need a mirror.
           </h2>
-          <p className="text-xl text-purple-100 mb-10 leading-relaxed">
+          <p className="text-xl text-green-100 mb-10 leading-relaxed">
             Join 100+ early users already building self-discipline with Swayami.
           </p>
           <button 

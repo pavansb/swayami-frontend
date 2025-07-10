@@ -13,7 +13,8 @@ const ProfileDropdown = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    // Redirect to external static landing page
+    window.location.href = 'https://swayami-spark-bliss.lovable.app';
   };
 
   return (

@@ -43,7 +43,7 @@ const WhoItsForSection = () => {
           {personas.map((persona, index) => (
             <div 
               key={index}
-              className="text-center p-8 rounded-2xl border border-swayami-border dark:border-gray-700 hover:shadow-lg transition-all duration-200 hover:border-swayami-primary dark:hover:border-purple-400 bg-white dark:bg-gray-800"
+              className="text-center p-8 rounded-2xl border border-swayami-border dark:border-gray-700 hover:shadow-lg transition-all duration-200 hover:border-swayami-primary dark:hover:border-green-400 bg-white dark:bg-gray-800"
             >
               <div className="text-4xl mb-4">{persona.emoji}</div>
               <h3 className="text-xl font-semibold text-swayami-black dark:text-white mb-2">

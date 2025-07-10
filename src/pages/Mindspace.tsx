@@ -140,7 +140,7 @@ const Mindspace = () => {
                       onClick={() => setSelectedMood(mood.label)}
                       className={`p-3 rounded-xl border transition-all hover:shadow-md ${
                         selectedMood === mood.label
-                          ? 'border-swayami-primary bg-purple-50'
+                          ? 'border-swayami-primary bg-green-50'
                           : 'border-swayami-border hover:border-gray-300'
                       }`}
                     >
@@ -165,7 +165,7 @@ const Mindspace = () => {
                   <Button 
                     variant="outline" 
                     onClick={handleSummarize}
-                    className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
+                    className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                   >
                     <Brain className="w-4 h-4 mr-2" />
                     Summarize with AI
@@ -173,7 +173,7 @@ const Mindspace = () => {
                   <Button 
                     variant="outline" 
                     onClick={handleExtractTasks}
-                    className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
+                    className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                   >
                     <Search className="w-4 h-4 mr-2" />
                     Get Smart Suggestions
@@ -182,7 +182,7 @@ const Mindspace = () => {
                     <Button 
                       variant="outline" 
                       onClick={handleAnalyzeMood}
-                      className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-purple-50"
+                      className="w-full rounded-xl border-swayami-primary text-swayami-primary hover:bg-green-50"
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
                       Analyze Mood

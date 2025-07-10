@@ -21,10 +21,10 @@ const TimelineSection = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {steps.map((step, index) => (
             <div key={index} className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-[#9650D4] text-white rounded-full flex items-center justify-center text-2xl mb-4">
+              <div className="w-16 h-16 bg-[#6FCC7F] text-white rounded-full flex items-center justify-center text-2xl mb-4">
                 {step.icon}
               </div>
-              <div className="text-sm text-[#9650D4] font-semibold mb-2">
+              <div className="text-sm text-[#6FCC7F] font-semibold mb-2">
                 Step {step.number}
               </div>
               <h3 className="text-xl font-bold text-[#1A1A1A]">

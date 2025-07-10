@@ -36,7 +36,7 @@ const TestimonialsSection = () => {
                 "{testimonial.quote}"
               </blockquote>
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-[#9650D4] rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                <div className="w-12 h-12 bg-[#6FCC7F] rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
                   {testimonial.author.charAt(0)}
                 </div>
                 <div>

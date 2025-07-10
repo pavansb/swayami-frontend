@@ -38,9 +38,9 @@ const ModernFeatureSection = () => {
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 hover:border-[#9650D4]/20"
+              className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 hover:border-[#6FCC7F]/20"
             >
-              <div className="text-3xl mb-4" style={{ color: '#9650D4' }}>
+              <div className="text-3xl mb-4" style={{ color: '#6FCC7F' }}>
                 {feature.icon}
               </div>
               <h3 className="text-xl font-bold text-[#1A1A1A] mb-3">

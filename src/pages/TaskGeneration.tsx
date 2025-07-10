@@ -332,7 +332,7 @@ const TaskGeneration = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#9650D4] mx-auto mb-6"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#6FCC7F] mx-auto mb-6"></div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             AI is crafting your perfect tasks...
           </h2>
@@ -375,7 +375,7 @@ const TaskGeneration = () => {
 
         {isGenerating ? (
           <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
             <p className="text-lg text-gray-600">Generating your personalized tasks...</p>
             <p className="text-sm text-gray-500 mt-2">This may take a moment as we analyze your goals</p>
           </div>
@@ -384,11 +384,11 @@ const TaskGeneration = () => {
             {goalsWithTasks.map((goalWithTasks) => (
               <div key={goalWithTasks.goalId} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 {/* Goal Header */}
-                <div className="bg-gradient-to-r from-[#9650D4] to-[#8547C4] text-white p-6">
+                <div className="bg-gradient-to-r from-[#6FCC7F] to-[#5bb96a] text-white p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold mb-2">{goalWithTasks.goalTitle}</h3>
-                      <p className="text-purple-100 text-sm">{goalWithTasks.goalDescription}</p>
+                      <p className="text-green-100 text-sm">{goalWithTasks.goalDescription}</p>
                     </div>
                     <Button
                       onClick={() => regenerateTasksForGoal(goalWithTasks.goalId)}
@@ -408,7 +408,7 @@ const TaskGeneration = () => {
                 </div>
 
                 {/* AI Analysis */}
-                <div className="p-6 bg-purple-50 border-b border-purple-100">
+                <div className="p-6 bg-green-50 border-b border-green-100">
                   <h4 className="font-semibold text-gray-900 mb-2">🧠 AI Analysis</h4>
                   <p className="text-gray-700 text-sm">{goalWithTasks.analysis}</p>
                 </div>
@@ -421,8 +421,8 @@ const TaskGeneration = () => {
                         key={taskIndex}
                         className={`border-2 rounded-xl p-4 transition-all duration-200 ${
                           goalWithTasks.selectedTasks[taskIndex]
-                            ? 'border-[#9650D4] bg-purple-50 shadow-md'
-                            : 'border-gray-200 bg-white hover:border-purple-200'
+                            ? 'border-[#6FCC7F] bg-green-50 shadow-md'
+                            : 'border-gray-200 bg-white hover:border-green-200'
                         }`}
                       >
                         <div className="flex items-start space-x-3">
@@ -502,7 +502,7 @@ const TaskGeneration = () => {
             <Button
               onClick={handleCompleteSetup}
               disabled={totalSelectedTasks === 0 || isCompleting}
-              className="bg-[#9650D4] hover:bg-[#8547C4] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+              className="bg-[#6FCC7F] hover:bg-[#5bb96a] text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-200 hover:shadow-lg disabled:opacity-50"
             >
               {isCompleting ? (
                 <>
@@ -524,8 +524,8 @@ const TaskGeneration = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="w-8 h-8 text-[#9650D4]" />
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-[#6FCC7F]" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
                   ✨ Want Daily Action Steps?
@@ -539,7 +539,7 @@ const TaskGeneration = () => {
               <div className="flex space-x-3">
                 <Button
                   onClick={handleDailyBreakdownYes}
-                  className="flex-1 bg-[#9650D4] hover:bg-[#8547C4] text-white"
+                  className="flex-1 bg-[#6FCC7F] hover:bg-[#5bb96a] text-white"
                 >
                   Yes, Break It Down! 🗓️
                 </Button>
@@ -559,7 +559,7 @@ const TaskGeneration = () => {
         {isGeneratingDailyBreakdown && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#9650D4] mx-auto mb-6"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#6FCC7F] mx-auto mb-6"></div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 🧠 AI is planning your week...
               </h3>
@@ -611,20 +611,20 @@ const TaskGeneration = () => {
                 </div>
                 
                 {/* Weekly Summary */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6">
+                <div className="bg-gradient-to-r from-green-50 to-pink-50 rounded-xl p-6 mb-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-[#9650D4]">{dailyBreakdown.totalDuration} min</div>
+                      <div className="text-2xl font-bold text-[#6FCC7F]">{dailyBreakdown.totalDuration} min</div>
                       <div className="text-sm text-gray-600">Total Weekly Time</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-[#9650D4]">
+                      <div className="text-2xl font-bold text-[#6FCC7F]">
                         {Math.round(dailyBreakdown.totalDuration / 60)}h {dailyBreakdown.totalDuration % 60}m
                       </div>
                       <div className="text-sm text-gray-600">Daily Average</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-[#9650D4]">{dailyBreakdown.weeklyPlan.length}</div>
+                      <div className="text-2xl font-bold text-[#6FCC7F]">{dailyBreakdown.weeklyPlan.length}</div>
                       <div className="text-sm text-gray-600">Active Days</div>
                     </div>
                   </div>
